@@ -114,7 +114,7 @@ rec = bp.build()
 ## Cut Out Interior
  I wanted a square interior as opposed to shelling the wedge outline.
 
- [Code Example 03 - Interior](../example/ex_02_angle.py)
+ [Code Example 03 - Interior](../example/ex_03_interior.py)
 
  ### New \_\_init__ Parameter
  ``` python
@@ -144,4 +144,59 @@ rec = bp.build()
 ![](image/05.png)
 
 ---
-## Create panels
+## Cut Panels
+
+[Code Example 04 - Cut Panels](../example/ex_04_cut.py)
+
+### Generate cut panels
+``` python
+def make_cut_panels(self):
+    length = self.length-(2*(self.inset+self.wall_width))
+    width = self.width-(2*(self.inset+self.wall_width))
+    height = self.height
+    inset = self.inset
+    p_length = self.panel_length
+    p_width = self.panel_width
+    padding = self.panel_padding
+
+    cut_panel = cq.Workplane("XY").box(p_length, p_width, height - padding)
+    x_panels_size = math.floor(length / (p_length + (padding)))
+    y_panels_size = math.floor(width / (p_length + (padding)))
+
+    x_pannels_plus = (
+        series(cut_panel, x_panels_size, length_offset= padding*2)
+        .rotate((1,0,0),(0,0,0),(self.angle)+90)
+        .translate((0,((self.width-inset+(padding/2))/2)-p_width/2,-1*(padding)))
+    )
+
+    x_pannels_minus = (
+        series(cut_panel, x_panels_size, length_offset= padding*2)
+        .rotate((1,0,0),(0,0,0),-1*(self.angle+90))
+        .translate((0,-1*(((self.width-inset+(padding/2))/2)-p_width/2),-1*(padding)))
+    )
+
+    y_pannels_plus = (
+        series(cut_panel, y_panels_size, length_offset= padding*2)
+        .rotate((0,0,1),(0,0,0),90)
+        .rotate((0,1,0),(0,0,0),-1*(self.angle)+90)
+        .translate((((self.length-inset+(padding/2))/2)-p_width/2,0,-1*(padding)))
+    )
+
+    y_pannels_minus = (
+        series(cut_panel, y_panels_size, length_offset= padding*2)
+        .rotate((0,0,1),(0,0,0),90)
+        .rotate((0,1,0),(0,0,0),(self.angle)+90)
+        .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
+    )
+
+    return x_pannels_plus.add(x_pannels_minus).add(y_pannels_plus).add(y_pannels_minus)
+```
+
+### Remove Cut Panels From Bunker
+``` python
+# cut panels
+  cut_panels = self.make_cut_panels()
+  self.wedge = self.wedge.cut(cut_panels)
+```
+
+![](image/06.png)
