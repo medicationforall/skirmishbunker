@@ -54,7 +54,7 @@ show_object(rec)
 
 [Code Example 02 - Angle Test](../example/ex_02_angle.py)
 
- ### New \_\_init__ Parameter
+### New \_\_init__ Parameter
 ``` python
     self.angle = 0
 ```
@@ -148,6 +148,14 @@ rec = bp.build()
 
 [Code Example 04 - Cut Panels](../example/ex_04_cut.py)
 
+### New \_\_init__ Parameters
+``` python
+self.wall_width = 5
+self.panel_length = 28
+self.panel_width = 6
+self.panel_padding = 4
+```
+
 ### Generate cut panels
 ``` python
 def make_cut_panels(self):
@@ -194,9 +202,23 @@ def make_cut_panels(self):
 
 ### Remove Cut Panels From Bunker
 ``` python
-# cut panels
+  # cut panels
   cut_panels = self.make_cut_panels()
   self.wedge = self.wedge.cut(cut_panels)
 ```
 
+### Build the bunker
+``` python
+bp = Bunker()
+bp.inset=20
+bp.width=150
+bp.length=120
+bp.make()
+rec = bp.build()
+```
+
 ![](image/06.png)
+
+---
+
+## Create The Panels
