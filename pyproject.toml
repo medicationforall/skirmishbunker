@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skirmishbunker"
+version = "0.0.1"
+authors = [
+  { name="James Adams", email="inklink28@gmail.com" }
+]
+description = "Python Library for building skirmish wargame terrain"
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent"
+]
+
+dependencies = [
+"cadquery==2.2.0b0",
+"numpy-stl",
+'cqmore @ git+https://github.com/JustinSDK/cqMore',
+'cadqueryhelper @ git+https://github.com/medicationforall/cadqueryhelper',
+'cqterrain @ git+https://github.com/medicationforall/cqterrain',
+'skirmishterrain @ git+https://github.com/medicationforall/skirmishterrain'
+]
+
+
+[project.urls]
+"Homepage" = "https://github.com/medicationforall/skirmishbunker"
+"Bug Tracker" = "https://github.com/medicationforall/skirmishbunker/issues"
