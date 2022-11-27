@@ -23,8 +23,7 @@ dependencies = [
 "numpy-stl",
 'cqmore @ git+https://github.com/JustinSDK/cqMore',
 'cadqueryhelper @ git+https://github.com/medicationforall/cadqueryhelper',
-'cqterrain @ git+https://github.com/medicationforall/cqterrain',
-'skirmishterrain @ git+https://github.com/medicationforall/skirmishterrain'
+'cqterrain @ git+https://github.com/medicationforall/cqterrain'
 ]
 
 

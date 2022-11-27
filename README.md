@@ -6,7 +6,6 @@ python Library for making a skirmish wargame bunker
 * [cqMore](https://github.com/JustinSDK/cqMore)
 * [cadqueryhelper](https://github.com/medicationforall/cadqueryhelper)
 * [cqterrain](https://github.com/medicationforall/cqterrain)
-* [skirmishterrain](https://github.com/medicationforall/skirmishterrain)
 
 
 ### Installation
