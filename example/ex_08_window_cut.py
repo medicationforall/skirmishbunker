@@ -94,30 +94,30 @@ class Bunker(Base):
         p_width = self.panel_width
         padding = self.panel_padding
         cut_width = self.wall_width + inset/2 + self.window_cut_width_padding
-        log(cut_width)
+        length_offset = p_length - self.window_length + padding*2
 
         cut_window = cq.Workplane("XY").box(self.window_length, cut_width,self.window_height)
         x_panels_size = math.floor(length / (p_length + (padding)))
         y_panels_size = math.floor(width / (p_length + (padding)))
 
         x_win_plus = (
-            series(cut_window, x_panels_size, length_offset= (self.panel_length/2)+(padding*2))
+            series(cut_window, x_panels_size, length_offset=length_offset)
             .translate((0,((self.width-inset+(padding/2))/2)-cut_width/2, -1*(padding)))
         )
 
         x_win_minus = (
-            series(cut_window, x_panels_size, length_offset= (self.panel_length/2)+(padding*2))
+            series(cut_window, x_panels_size, length_offset=length_offset)
             .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2), -1*(padding)))
         )
 
         y_win_plus = (
-            series(cut_window, y_panels_size, length_offset= (self.panel_length/2)+(padding*2))
+            series(cut_window, y_panels_size, length_offset=length_offset)
             .rotate((0,0,1),(0,0,0),90)
             .translate((((self.length-inset+(padding/2))/2)-cut_width/2,0,-1*(padding)))
         )
 
         y_win_minus = (
-            series(cut_window, y_panels_size, length_offset= (self.panel_length/2)+(padding*2))
+            series(cut_window, y_panels_size, length_offset=length_offset)
             .rotate((0,0,1),(0,0,0),90)
             .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
         )

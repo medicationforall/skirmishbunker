@@ -1,23 +1,7 @@
-# Copyright 2022 James Adams
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# 150 x 75 x 75 mm
-
-from . import Base
 import cadquery as cq
 from cadqueryhelper import shape, series
 from cqterrain import window
+from skirmishbunker import Base
 import math
 
 class Bunker(Base):
@@ -44,7 +28,6 @@ class Bunker(Base):
         self.window_cut_width_padding = 2
         self.window_length = 15
         self.window_height = 20
-        self.window_length_padding = 0
 
         self.window_frame_width = 2
         self.window_frame_chamfer = 1.6
@@ -129,7 +112,7 @@ class Bunker(Base):
         )
 
         x_win_minus = (
-            series(cut_window, x_panels_size, length_offset= length_offset)
+            series(cut_window, x_panels_size, length_offset=length_offset)
             .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2), -1*(padding)))
         )
 
@@ -273,6 +256,7 @@ class Bunker(Base):
 
         #determine angle
         self.angle =self.find_angle(self.inset, self.height)
+        log('angle' + str(self.angle))
 
         box = cq.Workplane("XY").box(10,10,10).rotate((0,1,0),(0,0,0),-1*(self.angle)).translate((self.length/2,0,0))
         #self.wedge = self.wedge.add(box)
@@ -282,6 +266,7 @@ class Bunker(Base):
         # cut panels
         cut_panels = self.make_cut_panels()
         self.cut_panels = cut_panels
+
         self.wedge = self.wedge.cut(cut_panels)
 
         self.make_detail_panels()
@@ -303,3 +288,12 @@ class Bunker(Base):
             .add(self.windows)
         )
         return scene
+
+bp = Bunker()
+bp.inset=10
+bp.width=150
+bp.length=120
+bp.make()
+rec = bp.build()
+
+show_object(rec)

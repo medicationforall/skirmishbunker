@@ -391,30 +391,30 @@ def make_cut_windows(self):
     p_width = self.panel_width
     padding = self.panel_padding
     cut_width = self.wall_width + inset/2 + self.window_cut_width_padding
-    log(cut_width)
+    length_offset = p_length - self.window_length + padding*2
 
     cut_window = cq.Workplane("XY").box(self.window_length, cut_width,self.window_height)
     x_panels_size = math.floor(length / (p_length + (padding)))
     y_panels_size = math.floor(width / (p_length + (padding)))
 
     x_win_plus = (
-        series(cut_window, x_panels_size, length_offset= (self.panel_length/2)+(padding*2))
+        series(cut_window, x_panels_size, length_offset=length_offset)
         .translate((0,((self.width-inset+(padding/2))/2)-cut_width/2, -1*(padding)))
     )
 
     x_win_minus = (
-        series(cut_window, x_panels_size, length_offset= (self.panel_length/2)+(padding*2))
+        series(cut_window, x_panels_size, length_offset=length_offset)
         .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2), -1*(padding)))
     )
 
     y_win_plus = (
-        series(cut_window, y_panels_size, length_offset= (self.panel_length/2)+(padding*2))
+        series(cut_window, y_panels_size, length_offset=length_offset)
         .rotate((0,0,1),(0,0,0),90)
         .translate((((self.length-inset+(padding/2))/2)-cut_width/2,0,-1*(padding)))
     )
 
     y_win_minus = (
-        series(cut_window, y_panels_size, length_offset= (self.panel_length/2)+(padding*2))
+        series(cut_window, y_panels_size, length_offset=length_offset)
         .rotate((0,0,1),(0,0,0),90)
         .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
     )
@@ -440,3 +440,137 @@ def build(self):
 ![](image/10.png)
 
 ---
+
+## Add Window Details
+
+[Code Example 09 - Window Detail](../example/ex_09_window_detail.py)
+
+### New Import
+
+``` python
+from cqterrain import window
+```
+
+The code we care about looks like this.
+``` python
+def frame(length=20, width = 4, height = 40, frame_width=3):
+    outline = cq.Workplane("XY").box(length, width, height)
+    inline =  cq.Workplane("XY").box(length-(frame_width*2), width, height-(frame_width*2))
+    return outline.cut(inline)
+```
+
+### New \_\_init__ Parameters
+
+``` python
+self.window_frame_width = 2
+self.window_frame_chamfer = 1.6
+self.window_frame_chamfer_select = "<Z or >Z"
+self.windows = None
+```
+
+### Create The Frame
+
+
+``` python
+frame = window.frame(self.window_length, cut_width, self.window_height, self.window_frame_width)
+frame = frame.faces("Y").edges(self.window_frame_chamfer_select).chamfer(self.window_frame_chamfer)
+```
+
+![](image/11.png)
+
+## Create the windows
+``` python
+def make_windows(self):
+    length = self.length-(2*(self.inset+self.wall_width))
+    width = self.width-(2*(self.inset+self.wall_width))
+    height = self.height
+    inset = self.inset
+    p_length = self.panel_length
+    p_width = self.panel_width
+    padding = self.panel_padding
+    cut_width = self.wall_width + inset/2 + self.window_cut_width_padding
+    length_offset = p_length - self.window_length + padding*2
+
+    frame = window.frame(self.window_length, cut_width, self.window_height, self.window_frame_width)
+    frame = frame.faces("Y").edges("<Z or >Z").chamfer(self.window_frame_chamfer)
+    x_panels_size = math.floor(length / (p_length + (padding)))
+    y_panels_size = math.floor(width / (p_length + (padding)))
+
+    x_win_plus = (
+        series(frame, x_panels_size, length_offset=length_offset)
+        .translate((0,((self.width-inset+(padding/2))/2)-cut_width/2, -1*(padding)))
+    )
+
+    x_win_minus = (
+        series(frame, x_panels_size, length_offset=length_offset)
+        .rotate((0,0,1),(0,0,0),180)
+        .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2), -1*(padding)))
+    )
+
+    y_win_plus = (
+        series(frame, y_panels_size, length_offset=length_offset)
+        .rotate((0,0,1),(0,0,0),90)
+        .translate((((self.length-inset+(padding/2))/2)-cut_width/2,0,-1*(padding)))
+    )
+
+    y_win_minus = (
+        series(frame, y_panels_size, length_offset=length_offset)
+        .rotate((0,0,1),(0,0,0),90)
+        .rotate((0,0,1),(0,0,0),180)
+        .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
+    )
+    self.windows = x_win_plus.add(x_win_minus).add(y_win_plus).add(y_win_minus)
+```
+
+
+### Update Build
+
+``` python
+def build(self):
+    super().build()
+
+    scene = (
+        cq.Workplane("XY")
+        .add(self.wedge)
+        .add(self.panels)
+        .cut(self.cut_windows)
+        .add(self.base)
+        .add(self.windows)
+    )
+    return scene
+```
+
+
+![](image/12.png)
+
+---
+
+## Testing Window Alternates
+
+``` python
+bp = Bunker()
+bp.inset=20
+bp.width=300
+bp.length=120
+bp.window_length = 7
+bp.window_height = 30
+bp.make()
+rec = bp.build()
+```
+
+![](image/13.png)
+
+``` python
+bp = Bunker()
+bp.inset=20
+bp.width=150
+bp.length=120
+bp.window_length = 18
+bp.window_height = 8
+bp.window_frame_chamfer = 1.6
+bp.window_frame_chamfer_select = "<Z"
+bp.make()
+rec = bp.build()
+```
+
+![](image/14.png)
