@@ -322,3 +322,38 @@ def make_detail_panels(self):
 ```
 
 ![](image/08.png)
+
+---
+
+## Clean up the base
+
+### New \_\_init__ Parameters
+
+``` python
+self.base_height = 2
+self.base = None
+```
+
+### Make the base
+``` python
+def make_base(self):
+    self.base = (
+        cq.Workplane("XY")
+        .box(self.length, self.width, self.base_height)
+        .translate((0,0,-1*((self.height/2)+(self.base_height/2))))
+    )
+```
+
+### Update Build
+``` python
+def build(self):
+    super().build()
+
+    scene = (
+        cq.Workplane("XY")
+        .add(self.wedge)
+        .add(self.panels)
+        .add(self.base)
+    )
+    return scene
+```
