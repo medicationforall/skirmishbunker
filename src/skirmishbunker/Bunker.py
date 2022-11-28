@@ -49,6 +49,7 @@ class Bunker(Base):
         self.window_frame_width = 2
         self.window_frame_chamfer = 1.6
         self.window_frame_chamfer_select = "<Z or >Z"
+        self.skip_windows = [0]
 
         self.wedge = None
         self.panels = None
@@ -106,7 +107,7 @@ class Bunker(Base):
             .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
         )
 
-        return x_panels_plus.add(x_panels_minus).add(y_panels_plus).add(y_panels_minus)
+        return x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
 
     def make_cut_windows(self):
         length = self.length-(2*(self.inset+self.wall_width))
@@ -130,6 +131,7 @@ class Bunker(Base):
 
         x_win_minus = (
             series(cut_window, x_panels_size, length_offset= length_offset)
+            .rotate((0,0,1),(0,0,0),180)
             .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2), -1*(padding)))
         )
 
@@ -142,10 +144,21 @@ class Bunker(Base):
         y_win_minus = (
             series(cut_window, y_panels_size, length_offset=length_offset)
             .rotate((0,0,1),(0,0,0),90)
+            .rotate((0,0,1),(0,0,0),180)
             .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
         )
 
-        self.cut_windows = x_win_plus.add(x_win_minus).add(y_win_plus).add(y_win_minus)
+        scene = x_win_plus.add(y_win_plus).add(x_win_minus).add(y_win_minus)
+
+        if self.skip_windows and len(self.skip_windows) > 0:
+            solids = scene.solids().vals()
+            scene = cq.Workplane("XY")
+
+            for  index, solid in enumerate(solids):
+                if index not in self.skip_windows:
+                    scene.add(solid)
+
+        self.cut_windows = scene
 
     def make_windows(self):
         length = self.length-(2*(self.inset+self.wall_width))
@@ -186,7 +199,17 @@ class Bunker(Base):
             .rotate((0,0,1),(0,0,0),180)
             .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
         )
-        self.windows = x_win_plus.add(x_win_minus).add(y_win_plus).add(y_win_minus)
+
+        scene = x_win_plus.add(y_win_plus).add(x_win_minus).add(y_win_minus)
+        if self.skip_windows and len(self.skip_windows) > 0:
+            solids = scene.solids().vals()
+            scene = cq.Workplane("XY")
+
+            for  index, solid in enumerate(solids):
+                if index not in self.skip_windows:
+                    scene.add(solid)
+
+        self.windows = scene
 
     def arch_detail(self):
         length = self.length-(2*(self.inset+self.wall_width))
@@ -248,7 +271,7 @@ class Bunker(Base):
             .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
         )
 
-        self.panels = x_panels_plus.add(x_panels_minus).add(y_panels_plus).add(y_panels_minus)
+        self.panels = x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
 
     def make_base(self):
         self.base = (
@@ -275,7 +298,6 @@ class Bunker(Base):
         self.angle =self.find_angle(self.inset, self.height)
 
         box = cq.Workplane("XY").box(10,10,10).rotate((0,1,0),(0,0,0),-1*(self.angle)).translate((self.length/2,0,0))
-        #self.wedge = self.wedge.add(box)
 
         self.wedge = self.wedge.cut(interior_rectangle)
 
@@ -289,7 +311,6 @@ class Bunker(Base):
 
         self.make_cut_windows()
         self.make_windows()
-
 
     def build(self):
         super().build()

@@ -66,7 +66,7 @@ class Bunker(Base):
             .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
         )
 
-        return x_panels_plus.add(x_panels_minus).add(y_panels_plus).add(y_panels_minus)
+        return x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
 
     def make(self):
         super().make()

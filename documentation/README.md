@@ -197,7 +197,7 @@ def make_cut_panels(self):
         .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
     )
 
-    return x_panels_plus.add(x_panels_minus).add(y_panels_plus).add(y_panels_minus)
+    return x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
 ```
 
 ### Remove Cut Panels From Bunker
@@ -322,7 +322,7 @@ def make_detail_panels(self):
           .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
       )
 
-      self.panels = x_panels_plus.add(x_panels_minus).add(y_panels_plus).add(y_panels_minus)
+      self.panels = x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
 ```
 
 ![](image/08.png)
@@ -419,7 +419,7 @@ def make_cut_windows(self):
         .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
     )
 
-    self.cut_windows = x_win_plus.add(x_win_minus).add(y_win_plus).add(y_win_minus)
+    self.cut_windows = x_win_plus.add(y_win_plus).add(x_win_minus).add(y_win_minus)
 ```
 
 ### Update Build
@@ -519,7 +519,7 @@ def make_windows(self):
         .rotate((0,0,1),(0,0,0),180)
         .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
     )
-    self.windows = x_win_plus.add(x_win_minus).add(y_win_plus).add(y_win_minus)
+    self.windows = x_win_plus.add(y_win_plus).add(x_win_minus).add(y_win_minus)
 ```
 
 
@@ -574,3 +574,41 @@ rec = bp.build()
 ```
 
 ![](image/14.png)
+
+---
+
+## Skip Window POC
+
+In order to add a door(s) I need to be able to skip adding the window greebles at certain indexes. I'd like to be able to set an array of windows to skip [0, 2, 4] and consistently not render those details.
+
+### New \_\_init__ Parameters
+``` python
+self.skip_windows = [0, 2, 4]
+```
+
+### Modify make_cut_windows and make_windows
+To enforce for the skip_windows array.
+
+``` python
+scene = x_win_plus.add(y_win_plus).add(x_win_minus).add(y_win_minus)
+
+if self.skip_windows and len(self.skip_windows) > 0:
+    solids = scene.solids().vals()
+    scene = cq.Workplane("XY")
+
+    for  index, solid in enumerate(solids):
+        if index not in self.skip_windows:
+            scene.add(solid)
+
+self.windows = scene
+```
+
+![](image/15.png)
+
+I'm making this look easy, but order in how the solids are added to the workplane and how the solids are rotated matters to have consistent indexes.
+
+![](image/16.png)
+
+Changing the overall dimensions should keep the same relative indexes.
+
+![](image/17.png)

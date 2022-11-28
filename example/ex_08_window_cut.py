@@ -83,7 +83,7 @@ class Bunker(Base):
             .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
         )
 
-        return x_panels_plus.add(x_panels_minus).add(y_panels_plus).add(y_panels_minus)
+        return x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
 
     def make_cut_windows(self):
         length = self.length-(2*(self.inset+self.wall_width))
@@ -122,7 +122,7 @@ class Bunker(Base):
             .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
         )
 
-        self.cut_windows = x_win_plus.add(x_win_minus).add(y_win_plus).add(y_win_minus)
+        self.cut_windows = x_win_plus.add(y_win_plus).add(x_win_minus).add(y_win_minus)
 
     def arch_detail(self):
         length = self.length-(2*(self.inset+self.wall_width))
@@ -184,7 +184,7 @@ class Bunker(Base):
             .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
         )
 
-        self.panels = x_panels_plus.add(x_panels_minus).add(y_panels_plus).add(y_panels_minus)
+        self.panels = x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
 
     def make_base(self):
         self.base = (
