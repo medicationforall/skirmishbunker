@@ -171,33 +171,33 @@ def make_cut_panels(self):
     x_panels_size = math.floor(length / (p_length + (padding)))
     y_panels_size = math.floor(width / (p_length + (padding)))
 
-    x_pannels_plus = (
+    x_panels_plus = (
         series(cut_panel, x_panels_size, length_offset= padding*2)
         .rotate((1,0,0),(0,0,0),(self.angle)+90)
         .translate((0,((self.width-inset+(padding/2))/2)-p_width/2,-1*(padding)))
     )
 
-    x_pannels_minus = (
+    x_panels_minus = (
         series(cut_panel, x_panels_size, length_offset= padding*2)
         .rotate((1,0,0),(0,0,0),-1*(self.angle+90))
         .translate((0,-1*(((self.width-inset+(padding/2))/2)-p_width/2),-1*(padding)))
     )
 
-    y_pannels_plus = (
+    y_panels_plus = (
         series(cut_panel, y_panels_size, length_offset= padding*2)
         .rotate((0,0,1),(0,0,0),90)
         .rotate((0,1,0),(0,0,0),-1*(self.angle)+90)
         .translate((((self.length-inset+(padding/2))/2)-p_width/2,0,-1*(padding)))
     )
 
-    y_pannels_minus = (
+    y_panels_minus = (
         series(cut_panel, y_panels_size, length_offset= padding*2)
         .rotate((0,0,1),(0,0,0),90)
         .rotate((0,1,0),(0,0,0),(self.angle)+90)
         .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
     )
 
-    return x_pannels_plus.add(x_pannels_minus).add(y_pannels_plus).add(y_pannels_minus)
+    return x_panels_plus.add(x_panels_minus).add(y_panels_plus).add(y_panels_minus)
 ```
 
 ### Remove Cut Panels From Bunker
@@ -222,6 +222,8 @@ rec = bp.build()
 ---
 
 ## Create Arch Detail
+
+[Code Example 05 - Arch Detail](../example/ex_05_arch_detail.py)
 
 ### New \_\_init__ Parameters
 ``` python
@@ -275,6 +277,8 @@ def build(self):
 
 ## Add Detail Panels to bunker
 
+[Code Example 06 - Detail Panels](../example/ex_06_detail_panels.py)
+
 ### Build Out make_detail_panels Method
 ``` python
 def make_detail_panels(self):
@@ -291,41 +295,43 @@ def make_detail_panels(self):
       x_panels_size = math.floor(length / (p_length + (padding)))
       y_panels_size = math.floor(width / (p_length + (padding)))
 
-      x_pannels_plus = (
+      x_panels_plus = (
           series(detail_panel, x_panels_size, length_offset= padding*2)
           .rotate((0,0,1),(0,0,0),180)
           .rotate((1,0,0),(0,0,0),(self.angle)-90)
           .translate((0,((self.width-inset+(padding/2))/2)-p_width/2,-1*(padding)))
       )
 
-      x_pannels_minus = (
+      x_panels_minus = (
           series(detail_panel, x_panels_size, length_offset= padding*2)
           .rotate((1,0,0),(0,0,0),-1*(self.angle-90))
           .translate((0,-1*(((self.width-inset+(padding/2))/2)-p_width/2),-1*(padding)))
       )
 
-      y_pannels_plus = (
+      y_panels_plus = (
           series(detail_panel, y_panels_size, length_offset= padding*2)
           .rotate((0,0,1),(0,0,0),-90)
           .rotate((0,1,0),(0,0,0),-1*(self.angle)+90)
           .translate((((self.length-inset+(padding/2))/2)-p_width/2,0,-1*(padding)))
       )
 
-      y_pannels_minus = (
+      y_panels_minus = (
           series(detail_panel, y_panels_size, length_offset= padding*2)
           .rotate((0,0,1),(0,0,0),90)
           .rotate((0,1,0),(0,0,0),(self.angle)-90)
           .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
       )
 
-      self.panels = x_pannels_plus.add(x_pannels_minus).add(y_pannels_plus).add(y_pannels_minus)
+      self.panels = x_panels_plus.add(x_panels_minus).add(y_panels_plus).add(y_panels_minus)
 ```
 
 ![](image/08.png)
 
 ---
 
-## Clean up the base
+## Add a Base
+
+[Code Example 07 - Base](../example/ex_07_base.py)
 
 ### New \_\_init__ Parameters
 
@@ -357,3 +363,80 @@ def build(self):
     )
     return scene
 ```
+
+![](image/09.png)
+
+---
+
+## Make Window Cut
+
+[Code Example 08 - Window Cut](../example/ex_08_window_cut.py)
+
+### New \_\_init__ Parameters
+``` python
+self.window_cut_width_padding = 1
+self.window_length = 15
+self.window_height = 20
+self.cut_windows = None
+```
+
+### Make the cut windows
+``` python
+def make_cut_windows(self):
+    length = self.length-(2*(self.inset+self.wall_width))
+    width = self.width-(2*(self.inset+self.wall_width))
+    height = self.height
+    inset = self.inset
+    p_length = self.panel_length
+    p_width = self.panel_width
+    padding = self.panel_padding
+    cut_width = self.wall_width + inset/2 + self.window_cut_width_padding
+    log(cut_width)
+
+    cut_window = cq.Workplane("XY").box(self.window_length, cut_width,self.window_height)
+    x_panels_size = math.floor(length / (p_length + (padding)))
+    y_panels_size = math.floor(width / (p_length + (padding)))
+
+    x_win_plus = (
+        series(cut_window, x_panels_size, length_offset= (self.panel_length/2)+(padding*2))
+        .translate((0,((self.width-inset+(padding/2))/2)-cut_width/2, -1*(padding)))
+    )
+
+    x_win_minus = (
+        series(cut_window, x_panels_size, length_offset= (self.panel_length/2)+(padding*2))
+        .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2), -1*(padding)))
+    )
+
+    y_win_plus = (
+        series(cut_window, y_panels_size, length_offset= (self.panel_length/2)+(padding*2))
+        .rotate((0,0,1),(0,0,0),90)
+        .translate((((self.length-inset+(padding/2))/2)-cut_width/2,0,-1*(padding)))
+    )
+
+    y_win_minus = (
+        series(cut_window, y_panels_size, length_offset= (self.panel_length/2)+(padding*2))
+        .rotate((0,0,1),(0,0,0),90)
+        .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
+    )
+
+    self.cut_windows = x_win_plus.add(x_win_minus).add(y_win_plus).add(y_win_minus)
+```
+
+### Update Build
+``` python
+def build(self):
+    super().build()
+
+    scene = (
+        cq.Workplane("XY")
+        .add(self.wedge)
+        .add(self.panels)
+        .add(self.base)
+        .cut(self.cut_windows)
+    )
+    return scene
+```
+
+![](image/10.png)
+
+---
