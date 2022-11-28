@@ -270,3 +270,55 @@ def build(self):
 ```
 
 ![](image/07.png)
+
+---
+
+## Add Detail Panels to bunker
+
+### Build Out make_detail_panels Method
+``` python
+def make_detail_panels(self):
+      length = self.length-(2*(self.inset+self.wall_width))
+      width = self.width-(2*(self.inset+self.wall_width))
+      height = self.height
+      inset = self.inset
+      p_length = self.panel_length
+      p_width = self.panel_width
+      padding = self.panel_padding
+
+      detail_panel = self.arch_detail()
+
+      x_panels_size = math.floor(length / (p_length + (padding)))
+      y_panels_size = math.floor(width / (p_length + (padding)))
+
+      x_pannels_plus = (
+          series(detail_panel, x_panels_size, length_offset= padding*2)
+          .rotate((0,0,1),(0,0,0),180)
+          .rotate((1,0,0),(0,0,0),(self.angle)-90)
+          .translate((0,((self.width-inset+(padding/2))/2)-p_width/2,-1*(padding)))
+      )
+
+      x_pannels_minus = (
+          series(detail_panel, x_panels_size, length_offset= padding*2)
+          .rotate((1,0,0),(0,0,0),-1*(self.angle-90))
+          .translate((0,-1*(((self.width-inset+(padding/2))/2)-p_width/2),-1*(padding)))
+      )
+
+      y_pannels_plus = (
+          series(detail_panel, y_panels_size, length_offset= padding*2)
+          .rotate((0,0,1),(0,0,0),-90)
+          .rotate((0,1,0),(0,0,0),-1*(self.angle)+90)
+          .translate((((self.length-inset+(padding/2))/2)-p_width/2,0,-1*(padding)))
+      )
+
+      y_pannels_minus = (
+          series(detail_panel, y_panels_size, length_offset= padding*2)
+          .rotate((0,0,1),(0,0,0),90)
+          .rotate((0,1,0),(0,0,0),(self.angle)-90)
+          .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
+      )
+
+      self.panels = x_pannels_plus.add(x_pannels_minus).add(y_pannels_plus).add(y_pannels_minus)
+```
+
+![](image/08.png)
