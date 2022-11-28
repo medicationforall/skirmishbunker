@@ -221,4 +221,52 @@ rec = bp.build()
 
 ---
 
-## Create The Panels
+## Create Arch Detail
+
+### New \_\_init__ Parameters
+``` python
+self.arch_padding_top = 3
+self.arch_padding_sides = 3
+self.arch_inner_height = 6
+self.inner_arch_top = 5
+self.inner_arch_sides = 4
+
+self.panels = None
+self.cut_panels = None
+```
+
+### Details
+``` python
+def arch_detail(self):
+    length = self.length-(2*(self.inset+self.wall_width))
+    width = self.width-(2*(self.inset+self.wall_width))
+    height = self.height
+    inset = self.inset
+    p_length = self.panel_length
+    p_width = self.panel_width
+    padding = self.panel_padding
+
+    panel_outline = cq.Workplane("XY").box(p_length, p_width, height - padding)
+    arch = shape.arch_pointed(p_length+self.arch_padding_sides, p_width/2 , height - padding + self.arch_padding_top, ((height - padding)/2) + self.arch_inner_height).translate((0,-1*(p_width/4),0))
+    inner_arch = shape.arch_pointed(p_length + self.arch_padding_sides - self.inner_arch_sides, p_width , height - padding + self.arch_padding_top - self.inner_arch_top, ((height - padding)/2) + self.arch_inner_height - self.inner_arch_sides)
+    inner_inner_arch = shape.arch_pointed(p_length + self.arch_padding_sides - self.inner_arch_sides-3, p_width/2 , height - padding + self.arch_padding_top - self.inner_arch_top-3, ((height - padding)/2) + self.arch_inner_height - self.inner_arch_sides).translate((0,(p_width/4),-1.5))
+    panel_back = cq.Workplane("XY").box(p_length, p_width/2, height - padding).translate((0,(p_width/4),0))
+    panel_detail = cq.Workplane("XY").add(panel_back).add(arch)
+    inside_arch = panel_back.cut(inner_inner_arch)
+    panel = panel_outline.intersect(panel_detail).cut(inner_arch).add(inside_arch)
+    return panel
+```
+
+### Update Build
+``` python
+def build(self):
+    super().build()
+    scene = (
+        cq.Workplane("XY")
+        #.add(self.wedge)
+        .add(self.panels)
+    )
+    return scene
+```
+
+![](image/07.png)
