@@ -5,6 +5,7 @@ bp = Bunker()
 bp.inset=20
 bp.width=150
 bp.length=120
+bp.height=72
 bp.window_length = 18
 bp.window_height = 8
 bp.window_frame_chamfer = 1.6

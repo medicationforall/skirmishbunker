@@ -9,6 +9,38 @@ https://www.pinterest.com/pin/bunker-part-2--483855553698959743/
 ![](https://i.pinimg.com/originals/03/13/93/031393ff27641fc9b0f084084672d858.jpg)
 
 ---
+## All Your Base
+[src code](../src/skirmishbunker/Base.py)
+
+**Base** is the class parent class that the project will inherit from.<br />
+There are two lifecycle methods **make** and **build**. For all intents **base** derived classes are factories for making cadquery solids.
+
+* **make** creates the parts off of class parameter values.
+* **build** assembles the made parts onto a cadquery workplane.
+
+If you call **build** without calling **make** an exception will be thrown.<br />
+You can call **make** multiple times.
+
+``` python
+class Base:
+    def __init__(self):
+        self.width = 75
+        self.length = 75
+        self.height = 75
+        self.make_called = False
+
+    def make(self):
+        self.make_called = True
+
+    def build(self):
+        if self.make_called == False:
+            raise Exception('Make has not been called')
+
+    def dimensions(self):
+        return (self.length, self.width, self.height)
+```
+
+---
 
 ## Making The Outline
 
@@ -579,6 +611,8 @@ rec = bp.build()
 
 ## Skip Window POC
 
+[Code Example 10 - Skip Windows](../example/ex_10_skip_windows.py)
+
 In order to add a door(s) I need to be able to skip adding the window greebles at certain indexes. I'd like to be able to set an array of windows to skip [0, 2, 4] and consistently not render those details.
 
 ### New \_\_init__ Parameters
@@ -612,3 +646,100 @@ I'm making this look easy, but order in how the solids are added to the workplan
 Changing the overall dimensions should keep the same relative indexes.
 
 ![](image/17.png)
+
+---
+
+## Cut Out The Door
+
+[Code Example 11 - Cut Door](../example/ex_11_cut_door.py)
+
+Follows the same indexing rules as the windows but in this case you are specifying which panels will have doors as opposed to which ones will not.
+
+### New \_\_init__ Parameters
+``` python
+self.door_panels = [0]
+self.door_length = 23
+self.door_height =35
+self.door_fillet = 4
+self.cut_doors = None
+```
+
+### Create The Cut Doors
+``` python
+def make_cut_doors(self):
+      length = self.length-(2*(self.inset+self.wall_width))
+      width = self.width-(2*(self.inset+self.wall_width))
+      height = self.height
+      inset = self.inset
+      p_length = self.panel_length
+      p_width = self.panel_width
+      padding = self.panel_padding
+      cut_width = self.wall_width + inset/2 + self.window_cut_width_padding
+      length_offset = p_length - self.door_length + padding*2
+
+      #cut_window = cq.Workplane("XY").box(self.window_length, cut_width,self.window_height)
+      cut_door = (
+          cq.Workplane("XY")
+          .box(self.door_length, 20, self.door_height)
+          .edges("|Y").fillet(self.door_fillet)
+          .translate((0,0,-1*(height/2 - self.door_height/2)+self.wall_width))
+      )
+      x_panels_size = math.floor(length / (p_length + (padding)))
+      y_panels_size = math.floor(width / (p_length + (padding)))
+
+      x_plus = (
+          series(cut_door, x_panels_size, length_offset=length_offset)
+          .translate((0,((self.width-inset+(padding/2))/2)-cut_width/2, 0))
+      )
+
+      x_minus = (
+          series(cut_door, x_panels_size, length_offset= length_offset)
+          .rotate((0,0,1),(0,0,0),180)
+          .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2),0))
+      )
+
+      y_plus = (
+          series(cut_door, y_panels_size, length_offset=length_offset)
+          .rotate((0,0,1),(0,0,0),90)
+          .translate((((self.length-inset+(padding/2))/2)-cut_width/2,0,0))
+      )
+
+      y_minus = (
+          series(cut_door, y_panels_size, length_offset=length_offset)
+          .rotate((0,0,1),(0,0,0),90)
+          .rotate((0,0,1),(0,0,0),180)
+          .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,0))
+      )
+
+      scene = x_plus.add(y_plus).add(x_minus).add(y_minus)
+
+      if self.door_panels and len(self.door_panels) > 0:
+          solids = scene.solids().vals()
+          scene = cq.Workplane("XY")
+
+          for  index, solid in enumerate(solids):
+              if index in self.door_panels:
+                  scene.add(solid)
+
+      self.cut_doors = scene
+```
+
+### Update Build
+
+``` python
+def build(self):
+    super().build()
+
+    scene = (
+        cq.Workplane("XY")
+        .union(self.wedge)
+        .union(self.panels)
+        .cut(self.cut_doors)
+        .cut(self.cut_windows)
+        .add(self.base)
+        .union(self.windows)
+    )
+    return scene
+```
+
+![](image/18.png)
