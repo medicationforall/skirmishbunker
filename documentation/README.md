@@ -1034,19 +1034,49 @@ Refer to the example to see the full list of changes.<br />
 
 ### Old make_detail_panels
 ``` python
-def make_cut_panels(self):
-    cut_panel = cq.Workplane("XY").box(
-        self.panel_length,
-        self.panel_width, self.height - self.panel_padding
-    )
-    cut_panel = (
-        cq.Workplane("XY").box(self.panel_length,self.panel_width, self.height - self.panel_padding)
-        .rotate((1,0,0),(0,0,0),(self.angle)+90)
-    )
+def make_detail_panels(self):
+      length = self.length-(2*(self.inset+self.wall_width))
+      width = self.width-(2*(self.inset+self.wall_width))
+      height = self.height
+      inset = self.inset
+      p_length = self.panel_length
+      p_width = self.panel_width
+      padding = self.panel_padding
 
-    x_translate = ((self.length-self.inset+(self.panel_padding/2))/2)-self.panel_width/2
-    y_translate = ((self.width-self.inset+(self.panel_padding/2))/2)-self.panel_width/2
-    self.cut_panels = self.make_series(cut_panel, length_offset=self.panel_padding*2, x_translate=x_translate,y_translate=y_translate, z_translate=-1*(self.panel_padding))
+      detail_panel = self.arch_detail()
+
+      x_panels_size = math_floor(length / (p_length + (padding)))
+      y_panels_size = math_floor(width / (p_length + (padding)))
+
+      x_panels_plus = (
+          series(detail_panel, x_panels_size, length_offset= padding*2)
+          .rotate((0,0,1),(0,0,0),180)
+          .rotate((1,0,0),(0,0,0),(self.angle)-90)
+          .translate((0,((self.width-inset+(padding/2))/2)-p_width/2,-1*(padding)))
+      )
+
+      x_panels_minus = (
+          series(detail_panel, x_panels_size, length_offset= padding*2)
+          .rotate((1,0,0),(0,0,0),-1*(self.angle-90))
+          .translate((0,-1*(((self.width-inset+(padding/2))/2)-p_width/2),-1*(padding)))
+      )
+
+      y_panels_plus = (
+          series(detail_panel, y_panels_size, length_offset= padding*2)
+          .rotate((0,0,1),(0,0,0),-90)
+          .rotate((0,1,0),(0,0,0),-1*(self.angle)+90)
+          .translate((((self.length-inset+(padding/2))/2)-p_width/2,0,-1*(padding)))
+      )
+
+      y_panels_minus = (
+          series(detail_panel, y_panels_size, length_offset= padding*2)
+          .rotate((0,0,1),(0,0,0),90)
+          .rotate((0,1,0),(0,0,0),(self.angle)-90)
+          .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
+      )
+
+      self.panels = x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
+
 ```
 
 ### New make_detail_panels
