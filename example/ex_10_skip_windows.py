@@ -1,8 +1,8 @@
 import cadquery as cq
 from cadqueryhelper import shape, series
-from cqterrain import window
+from cqterrain import roof, window
 from skirmishbunker import Base
-import math
+from math import floor as math_floor
 
 class Bunker(Base):
     def __init__(self):
@@ -12,7 +12,7 @@ class Bunker(Base):
         self.height = 75
 
         self.angle = 0
-        self.inset = 9
+        self.inset = 10
         self.wall_width = 5
         self.panel_length = 28
         self.panel_width = 6
@@ -28,7 +28,6 @@ class Bunker(Base):
         self.window_cut_width_padding = 2
         self.window_length = 15
         self.window_height = 20
-        self.window_length_padding = 0
 
         self.window_frame_width = 2
         self.window_frame_chamfer = 1.6
@@ -36,21 +35,26 @@ class Bunker(Base):
         self.skip_windows = [0, 2, 4]
 
         self.wedge = None
+        self.interior_rectangle = None
         self.panels = None
         self.cut_panels = None
         self.cut_windows = None
         self.windows = None
         self.base = None
 
-    def find_angle(self, length, height):
-        '''
-        Presumed length and height are part of a right triangle
-        '''
-        hyp = math.hypot(length, height)
-        angle = length/hyp
-        angle_radians = math.acos((angle))
-        angle_deg = math.degrees(angle_radians)
-        return angle_deg
+    def make_wedge(self):
+        self.wedge = (
+            cq.Workplane("XY" )
+            .wedge(self.length,self.height,self.width,self.inset,self.inset,self.length-self.inset,self.width-self.inset)
+            .rotate((1,0,0),(0,0,0),-90)
+        )
+
+    def make_interior_rectangle(self):
+        self.interior_rectangle = (
+            cq.Workplane("XY")
+            .box(self.length-(2*(self.inset+self.wall_width)), self.width-(2*(self.inset+self.wall_width)), self.height-self.wall_width)
+            .translate((0,0,self.wall_width/2))
+        )
 
     def make_cut_panels(self):
         length = self.length-(2*(self.inset+self.wall_width))
@@ -62,8 +66,8 @@ class Bunker(Base):
         padding = self.panel_padding
 
         cut_panel = cq.Workplane("XY").box(p_length, p_width, height - padding)
-        x_panels_size = math.floor(length / (p_length + (padding)))
-        y_panels_size = math.floor(width / (p_length + (padding)))
+        x_panels_size = math_floor(length / (p_length + (padding)))
+        y_panels_size = math_floor(width / (p_length + (padding)))
 
         x_panels_plus = (
             series(cut_panel, x_panels_size, length_offset= padding*2)
@@ -91,109 +95,7 @@ class Bunker(Base):
             .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
         )
 
-        return x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
-
-    def make_cut_windows(self):
-        length = self.length-(2*(self.inset+self.wall_width))
-        width = self.width-(2*(self.inset+self.wall_width))
-        height = self.height
-        inset = self.inset
-        p_length = self.panel_length
-        p_width = self.panel_width
-        padding = self.panel_padding
-        cut_width = self.wall_width + inset/2 + self.window_cut_width_padding
-        length_offset = p_length - self.window_length + padding*2
-
-        cut_window = cq.Workplane("XY").box(self.window_length, cut_width,self.window_height)
-        x_panels_size = math.floor(length / (p_length + (padding)))
-        y_panels_size = math.floor(width / (p_length + (padding)))
-
-        x_win_plus = (
-            series(cut_window, x_panels_size, length_offset=length_offset)
-            .translate((0,((self.width-inset+(padding/2))/2)-cut_width/2, -1*(padding)))
-        )
-
-        x_win_minus = (
-            series(cut_window, x_panels_size, length_offset= length_offset)
-            .rotate((0,0,1),(0,0,0),180)
-            .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2), -1*(padding)))
-        )
-
-        y_win_plus = (
-            series(cut_window, y_panels_size, length_offset=length_offset)
-            .rotate((0,0,1),(0,0,0),90)
-            .translate((((self.length-inset+(padding/2))/2)-cut_width/2,0,-1*(padding)))
-        )
-
-        y_win_minus = (
-            series(cut_window, y_panels_size, length_offset=length_offset)
-            .rotate((0,0,1),(0,0,0),90)
-            .rotate((0,0,1),(0,0,0),180)
-            .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
-        )
-
-        scene = x_win_plus.add(y_win_plus).add(x_win_minus).add(y_win_minus)
-
-        if self.skip_windows and len(self.skip_windows) > 0:
-            solids = scene.solids().vals()
-            scene = cq.Workplane("XY")
-
-            for  index, solid in enumerate(solids):
-                if index not in self.skip_windows:
-                    scene.add(solid)
-
-        self.cut_windows = scene
-
-    def make_windows(self):
-        length = self.length-(2*(self.inset+self.wall_width))
-        width = self.width-(2*(self.inset+self.wall_width))
-        height = self.height
-        inset = self.inset
-        p_length = self.panel_length
-        p_width = self.panel_width
-        padding = self.panel_padding
-        cut_width = self.wall_width + inset/2 + self.window_cut_width_padding
-        length_offset = p_length - self.window_length + padding*2
-
-        frame = window.frame(self.window_length, cut_width, self.window_height, self.window_frame_width)
-        frame = frame.faces("Y").edges(self.window_frame_chamfer_select).chamfer(self.window_frame_chamfer)
-        x_panels_size = math.floor(length / (p_length + (padding)))
-        y_panels_size = math.floor(width / (p_length + (padding)))
-
-        x_win_plus = (
-            series(frame, x_panels_size, length_offset=length_offset)
-            .translate((0,((self.width-inset+(padding/2))/2)-cut_width/2, -1*(padding)))
-        )
-
-        x_win_minus = (
-            series(frame, x_panels_size, length_offset=length_offset)
-            .rotate((0,0,1),(0,0,0),180)
-            .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2), -1*(padding)))
-        )
-
-        y_win_plus = (
-            series(frame, y_panels_size, length_offset=length_offset)
-            .rotate((0,0,1),(0,0,0),90)
-            .translate((((self.length-inset+(padding/2))/2)-cut_width/2,0,-1*(padding)))
-        )
-
-        y_win_minus = (
-            series(frame, y_panels_size, length_offset=length_offset)
-            .rotate((0,0,1),(0,0,0),90)
-            .rotate((0,0,1),(0,0,0),180)
-            .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
-        )
-
-        scene = x_win_plus.add(y_win_plus).add(x_win_minus).add(y_win_minus)
-        if self.skip_windows and len(self.skip_windows) > 0:
-            solids = scene.solids().vals()
-            scene = cq.Workplane("XY")
-
-            for  index, solid in enumerate(solids):
-                if index not in self.skip_windows:
-                    scene.add(solid)
-
-        self.windows = scene
+        self.cut_panels = x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
 
     def arch_detail(self):
         length = self.length-(2*(self.inset+self.wall_width))
@@ -225,8 +127,8 @@ class Bunker(Base):
 
         detail_panel = self.arch_detail()
 
-        x_panels_size = math.floor(length / (p_length + (padding)))
-        y_panels_size = math.floor(width / (p_length + (padding)))
+        x_panels_size = math_floor(length / (p_length + (padding)))
+        y_panels_size = math_floor(width / (p_length + (padding)))
 
         x_panels_plus = (
             series(detail_panel, x_panels_size, length_offset= padding*2)
@@ -264,52 +166,129 @@ class Bunker(Base):
             .translate((0,0,-1*((self.height/2)+(self.base_height/2))))
         )
 
+    def make_cut_windows(self):
+        length = self.length-(2*(self.inset+self.wall_width))
+        width = self.width-(2*(self.inset+self.wall_width))
+        height = self.height
+        inset = self.inset
+        p_length = self.panel_length
+        p_width = self.panel_width
+        padding = self.panel_padding
+        cut_width = self.wall_width + inset/2 + self.window_cut_width_padding
+        length_offset = p_length - self.window_length + padding*2
+
+        cut_window = cq.Workplane("XY").box(self.window_length, cut_width,self.window_height)
+        x_panels_size = math_floor(length / (p_length + (padding)))
+        y_panels_size = math_floor(width / (p_length + (padding)))
+
+        x_win_plus = (
+            series(cut_window, x_panels_size, length_offset=length_offset)
+            .translate((0,((self.width-inset+(padding/2))/2)-cut_width/2, -1*(padding)))
+        )
+
+        x_win_minus = (
+            series(cut_window, x_panels_size, length_offset=length_offset)
+            .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2), -1*(padding)))
+        )
+
+        y_win_plus = (
+            series(cut_window, y_panels_size, length_offset=length_offset)
+            .rotate((0,0,1),(0,0,0),90)
+            .translate((((self.length-inset+(padding/2))/2)-cut_width/2,0,-1*(padding)))
+        )
+
+        y_win_minus = (
+            series(cut_window, y_panels_size, length_offset=length_offset)
+            .rotate((0,0,1),(0,0,0),90)
+            .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
+        )
+
+        scene = x_win_plus.add(y_win_plus).add(x_win_minus).add(y_win_minus)
+
+        if self.skip_windows and len(self.skip_windows) > 0:
+            solids = scene.solids().vals()
+            scene = cq.Workplane("XY")
+
+            for  index, solid in enumerate(solids):
+                if index not in self.skip_windows:
+                    scene.add(solid)
+
+        self.cut_windows = scene
+
+    def make_windows(self):
+        length = self.length-(2*(self.inset+self.wall_width))
+        width = self.width-(2*(self.inset+self.wall_width))
+        height = self.height
+        inset = self.inset
+        p_length = self.panel_length
+        p_width = self.panel_width
+        padding = self.panel_padding
+        cut_width = self.wall_width + inset/2 + self.window_cut_width_padding
+        length_offset = p_length - self.window_length + padding*2
+
+        frame = window.frame(self.window_length, cut_width, self.window_height, self.window_frame_width)
+        frame = frame.faces("Y").edges(self.window_frame_chamfer_select).chamfer(self.window_frame_chamfer)
+        x_panels_size = math_floor(length / (p_length + (padding)))
+        y_panels_size = math_floor(width / (p_length + (padding)))
+
+        x_win_plus = (
+            series(frame, x_panels_size, length_offset=length_offset)
+            .translate((0,((self.width-inset+(padding/2))/2)-cut_width/2, -1*(padding)))
+        )
+
+        x_win_minus = (
+            series(frame, x_panels_size, length_offset=length_offset)
+            .rotate((0,0,1),(0,0,0),180)
+            .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2), -1*(padding)))
+        )
+
+        y_win_plus = (
+            series(frame, y_panels_size, length_offset=length_offset)
+            .rotate((0,0,1),(0,0,0),90)
+            .translate((((self.length-inset+(padding/2))/2)-cut_width/2,0,-1*(padding)))
+        )
+
+        y_win_minus = (
+            series(frame, y_panels_size, length_offset=length_offset)
+            .rotate((0,0,1),(0,0,0),90)
+            .rotate((0,0,1),(0,0,0),180)
+            .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
+        )
+
+        scene = x_win_plus.add(y_win_plus).add(x_win_minus).add(y_win_minus)
+        if self.skip_windows and len(self.skip_windows) > 0:
+            solids = scene.solids().vals()
+            scene = cq.Workplane("XY")
+
+            for  index, solid in enumerate(solids):
+                if index not in self.skip_windows:
+                    scene.add(solid)
+
+        self.windows = scene
+
     def make(self):
         super().make()
-        interior_rectangle = (
-            cq.Workplane("XY")
-            .box(self.length-(2*(self.inset+self.wall_width)), self.width-(2*(self.inset+self.wall_width)), self.height-self.wall_width)
-            .translate((0,0,self.wall_width/2))
-        )
+        self.angle =roof.angle(self.inset, self.height)
 
-        self.wedge = (
-            cq.Workplane("XY" )
-            .wedge(self.length,self.height,self.width,self.inset,self.inset,self.length-self.inset,self.width-self.inset)
-            .rotate((1,0,0),(0,0,0),-90)
-        )
-
-        #determine angle
-        self.angle =self.find_angle(self.inset, self.height)
-        #log('angle' + str(self.angle))
-
-        box = cq.Workplane("XY").box(10,10,10).rotate((0,1,0),(0,0,0),-1*(self.angle)).translate((self.length/2,0,0))
-        #self.wedge = self.wedge.add(box)
-
-        self.wedge = self.wedge.cut(interior_rectangle)
-
-        # cut panels
-        cut_panels = self.make_cut_panels()
-        self.cut_panels = cut_panels
-
-        self.wedge = self.wedge.cut(cut_panels)
-
+        self.make_wedge()
+        self.make_interior_rectangle()
+        self.make_cut_panels()
         self.make_detail_panels()
         self.make_base()
-
         self.make_cut_windows()
         self.make_windows()
 
-
     def build(self):
         super().build()
-
         scene = (
             cq.Workplane("XY")
-            .add(self.wedge)
-            .add(self.panels)
+            .union(self.wedge)
+            .cut(self.interior_rectangle)
+            .cut(self.cut_panels)
+            .union(self.panels)
+            .union(self.base)
             .cut(self.cut_windows)
-            .add(self.base)
-            .add(self.windows)
+            .union(self.windows)
         )
         return scene
 

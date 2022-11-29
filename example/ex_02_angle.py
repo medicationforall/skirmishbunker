@@ -1,7 +1,7 @@
 import cadquery as cq
 from cadqueryhelper import shape
+from cqterrain import roof
 from skirmishbunker import Base
-import math
 
 class Bunker(Base):
     def __init__(self):
@@ -9,30 +9,24 @@ class Bunker(Base):
         self.length = 100
         self.width = 100
         self.height = 75
+
         self.inset = 10
         self.angle = 0
+
         self.wedge = None
 
-    def find_angle(self, length, height):
-        '''
-        Presumed length and height are part of a right triangle
-        '''
-        hyp = math.hypot(length, height)
-        angle = length/hyp
-        angle_radians = math.acos((angle))
-        angle_deg = math.degrees(angle_radians)
-        return angle_deg
-
-    def make(self):
-        super().make()
-
+    def make_wedge(self):
         self.wedge = (
             cq.Workplane("XY" )
             .wedge(self.length,self.height,self.width,self.inset,self.inset,self.length-self.inset,self.width-self.inset)
             .rotate((1,0,0),(0,0,0),-90)
         )
-        #determine angle
-        self.angle =self.find_angle(self.inset, self.height)
+
+    def make(self):
+        super().make()
+        self.angle =roof.angle(self.inset, self.height)
+
+        self.make_wedge()
 
         # Add example box
         box = cq.Workplane("XY").box(10,10,10).rotate((0,1,0),(0,0,0),-1*(self.angle)).translate((self.length/2,0,0))
@@ -40,7 +34,11 @@ class Bunker(Base):
 
     def build(self):
         super().build()
-        return self.wedge
+        scene = (
+            cq.Workplane("XY")
+            .union(self.wedge)
+        )
+        return scene
 
 bp = Bunker()
 bp.inset=40

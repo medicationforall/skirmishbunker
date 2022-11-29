@@ -43,6 +43,7 @@ class Base:
 ---
 
 ## Making The Outline
+* Create the wedge outline, this is part of the blocking process.
 
 [Example 01 - Outline](../example/ex_01_outline.py)
 
@@ -57,20 +58,29 @@ class Bunker(Base):
         self.length = 100
         self.width = 100
         self.height = 75
+
         self.inset = 10
+
         self.wedge = None
 
-    def make(self):
-        super().make()
+    def make_wedge(self):
         self.wedge = (
             cq.Workplane("XY" )
             .wedge(self.length,self.height,self.width,self.inset,self.inset,self.length-self.inset,self.width-self.inset)
             .rotate((1,0,0),(0,0,0),-90)
         )
 
+    def make(self):
+        super().make()
+        self.make_wedge()
+
     def build(self):
         super().build()
-        return self.wedge
+        scene = (
+            cq.Workplane("XY")
+            .union(self.wedge)
+        )
+        return scene
 
 bp = Bunker()
 bp.make()
@@ -84,16 +94,24 @@ show_object(rec)
 ---
 ## Determine Wall Angle
 
+* Calculate arccosine of base to inset angle.
+* As a proof of concept I'm aligning a box to the exterior angled wall.
+
 [Code Example 02 - Angle Test](../example/ex_02_angle.py)
+
+### Add import
+``` python
+from cqterrain import roof
+```
 
 ### New \_\_init__ Parameter
 ``` python
     self.angle = 0
 ```
 
-### Angle code
+### Angle Code From cqterrain roof
 ``` python
-def find_angle(self, length, height):
+def angle(self, length, height):
     '''
     Presumed length and height are part of a right triangle
     '''
@@ -104,25 +122,23 @@ def find_angle(self, length, height):
     return angle_deg
 ```
 
-### Update make method
+### Update make
 ``` python
 def make(self):
     super().make()
-    self.wedge = (
-        cq.Workplane("XY" )
-        .wedge(self.length,self.height,self.width,self.inset,self.inset,self.length-self.inset,self.width-self.inset)
-        .rotate((1,0,0),(0,0,0),-90)
-    )
+    self.angle =roof.angle(self.inset, self.height)
 
-    #determine angle
-    self.angle =self.find_angle(self.inset, self.height)
+    self.make_wedge()
 
     # Add example box
     box = cq.Workplane("XY").box(10,10,10).rotate((0,1,0),(0,0,0),-1*(self.angle)).translate((self.length/2,0,0))
     self.wedge = self.wedge.add(box)
 ```
 
+
 ### Generate examples
+
+#### Inset 40
 ``` python
 bp = Bunker()
 bp.inset=40
@@ -131,6 +147,8 @@ rec = bp.build()
 ```
 
 ![](image/02.png)
+
+#### Inset 10
 
 ``` python
 bp = Bunker()
@@ -144,22 +162,53 @@ rec = bp.build()
 ---
 
 ## Cut Out Interior
- I wanted a square interior as opposed to shelling the wedge outline.
+* I wanted a square interior as opposed to shelling the wedge outline.
 
- [Code Example 03 - Interior](../example/ex_03_interior.py)
+[Code Example 03 - Interior](../example/ex_03_interior.py)
 
- ### New \_\_init__ Parameter
+### New \_\_init__ Parameter
+
  ``` python
  self.inset = 20
+ self.interior_rectangle = None
  ```
 
- ### Create interior_rectangle
+### Create interior_rectangle
+
 ``` python
-interior_rectangle = (
-    cq.Workplane("XY")
-    .box(self.length-(2*(self.inset+self.wall_width)), self.width-(2*(self.inset+self.wall_width)), self.height-self.wall_width)
-    .translate((0,0,self.wall_width/2))
-)
+def make_interior_rectangle(self):
+    self.interior_rectangle = (
+        cq.Workplane("XY")
+        .box(self.length-(2*(self.inset+self.wall_width)), self.width-(2*(self.inset+self.wall_width)), self.height-self.wall_width)
+        .translate((0,0,self.wall_width/2))
+    )
+```
+
+### Update make
+
+``` python
+def make(self):
+    super().make()
+    self.angle =roof.angle(self.inset, self.height)
+
+    self.make_wedge()
+    self.make_interior_rectangle()
+
+    # Add example box
+    box = cq.Workplane("XY").box(10,10,10).rotate((0,1,0),(0,0,0),-1*(self.angle)).translate((self.length/2,0,0))
+    self.wedge = self.wedge.add(box)
+```
+
+### Update build
+``` python
+def build(self):
+    super().build()
+    scene = (
+        cq.Workplane("XY")
+        .union(self.wedge)
+        .cut(self.interior_rectangle)
+    )
+    return scene
 ```
 
 ![](image/04.png)
@@ -177,8 +226,14 @@ rec = bp.build()
 
 ---
 ## Cut Panels
+* Create the outline rectangles where the bunker details will go.
 
 [Code Example 04 - Cut Panels](../example/ex_04_cut.py)
+
+### Add import
+``` python
+from math import floor as math_floor
+```
 
 ### New \_\_init__ Parameters
 ``` python
@@ -186,57 +241,76 @@ self.wall_width = 5
 self.panel_length = 28
 self.panel_width = 6
 self.panel_padding = 4
+
+self.cut_panels = None
 ```
 
-### Generate cut panels
+### Generate Cut Panels
 ``` python
 def make_cut_panels(self):
-    length = self.length-(2*(self.inset+self.wall_width))
-    width = self.width-(2*(self.inset+self.wall_width))
-    height = self.height
-    inset = self.inset
-    p_length = self.panel_length
-    p_width = self.panel_width
-    padding = self.panel_padding
+      length = self.length-(2*(self.inset+self.wall_width))
+      width = self.width-(2*(self.inset+self.wall_width))
+      height = self.height
+      inset = self.inset
+      p_length = self.panel_length
+      p_width = self.panel_width
+      padding = self.panel_padding
 
-    cut_panel = cq.Workplane("XY").box(p_length, p_width, height - padding)
-    x_panels_size = math.floor(length / (p_length + (padding)))
-    y_panels_size = math.floor(width / (p_length + (padding)))
+      cut_panel = cq.Workplane("XY").box(p_length, p_width, height - padding)
+      x_panels_size = math_floor(length / (p_length + (padding)))
+      y_panels_size = math_floor(width / (p_length + (padding)))
 
-    x_panels_plus = (
-        series(cut_panel, x_panels_size, length_offset= padding*2)
-        .rotate((1,0,0),(0,0,0),(self.angle)+90)
-        .translate((0,((self.width-inset+(padding/2))/2)-p_width/2,-1*(padding)))
-    )
+      x_panels_plus = (
+          series(cut_panel, x_panels_size, length_offset= padding*2)
+          .rotate((1,0,0),(0,0,0),(self.angle)+90)
+          .translate((0,((self.width-inset+(padding/2))/2)-p_width/2,-1*(padding)))
+      )
 
-    x_panels_minus = (
-        series(cut_panel, x_panels_size, length_offset= padding*2)
-        .rotate((1,0,0),(0,0,0),-1*(self.angle+90))
-        .translate((0,-1*(((self.width-inset+(padding/2))/2)-p_width/2),-1*(padding)))
-    )
+      x_panels_minus = (
+          series(cut_panel, x_panels_size, length_offset= padding*2)
+          .rotate((1,0,0),(0,0,0),-1*(self.angle+90))
+          .translate((0,-1*(((self.width-inset+(padding/2))/2)-p_width/2),-1*(padding)))
+      )
 
-    y_panels_plus = (
-        series(cut_panel, y_panels_size, length_offset= padding*2)
-        .rotate((0,0,1),(0,0,0),90)
-        .rotate((0,1,0),(0,0,0),-1*(self.angle)+90)
-        .translate((((self.length-inset+(padding/2))/2)-p_width/2,0,-1*(padding)))
-    )
+      y_panels_plus = (
+          series(cut_panel, y_panels_size, length_offset= padding*2)
+          .rotate((0,0,1),(0,0,0),90)
+          .rotate((0,1,0),(0,0,0),-1*(self.angle)+90)
+          .translate((((self.length-inset+(padding/2))/2)-p_width/2,0,-1*(padding)))
+      )
 
-    y_panels_minus = (
-        series(cut_panel, y_panels_size, length_offset= padding*2)
-        .rotate((0,0,1),(0,0,0),90)
-        .rotate((0,1,0),(0,0,0),(self.angle)+90)
-        .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
-    )
+      y_panels_minus = (
+          series(cut_panel, y_panels_size, length_offset= padding*2)
+          .rotate((0,0,1),(0,0,0),90)
+          .rotate((0,1,0),(0,0,0),(self.angle)+90)
+          .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
+      )
 
-    return x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
+      self.cut_panels = x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
 ```
 
-### Remove Cut Panels From Bunker
+### Update make
 ``` python
-  # cut panels
-  cut_panels = self.make_cut_panels()
-  self.wedge = self.wedge.cut(cut_panels)
+def make(self):
+    super().make()
+    self.angle =roof.angle(self.inset, self.height)
+
+    self.make_wedge()
+    self.make_interior_rectangle()
+    self.make_cut_panels()
+```
+
+### Update build
+``` python
+def build(self):
+    super().build()
+    scene = (
+        cq.Workplane("XY")
+        .union(self.wedge)
+        .cut(self.interior_rectangle)
+        .cut(self.cut_panels)
+    )
+    return scene
 ```
 
 ### Build the bunker
@@ -269,7 +343,7 @@ self.panels = None
 self.cut_panels = None
 ```
 
-### Details
+### Arch Details
 ``` python
 def arch_detail(self):
     length = self.length-(2*(self.inset+self.wall_width))
@@ -291,14 +365,35 @@ def arch_detail(self):
     return panel
 ```
 
-### Update Build
+### Stub make_detail_panels
+``` python
+def make_detail_panels(self):
+    detail_panel = self.arch_detail()
+    self.panels = detail_panel
+```
+
+### Update make
+``` python
+def make(self):
+    super().make()
+    self.angle =roof.angle(self.inset, self.height)
+
+    self.make_wedge()
+    self.make_interior_rectangle()
+    self.make_cut_panels()
+    self.make_detail_panels()
+```
+
+### Update build
 ``` python
 def build(self):
     super().build()
     scene = (
         cq.Workplane("XY")
-        #.add(self.wedge)
-        .add(self.panels)
+        .union(self.wedge)
+        .cut(self.interior_rectangle)
+        .cut(self.cut_panels)
+        .union(self.panels)
     )
     return scene
 ```
@@ -308,6 +403,9 @@ def build(self):
 ---
 
 ## Add Detail Panels to bunker
+
+* Stamp the arch details onto the building.
+* Build out the stub method make_detail_panels from the previous example.
 
 [Code Example 06 - Detail Panels](../example/ex_06_detail_panels.py)
 
@@ -324,8 +422,8 @@ def make_detail_panels(self):
 
       detail_panel = self.arch_detail()
 
-      x_panels_size = math.floor(length / (p_length + (padding)))
-      y_panels_size = math.floor(width / (p_length + (padding)))
+      x_panels_size = math_floor(length / (p_length + (padding)))
+      y_panels_size = math_floor(width / (p_length + (padding)))
 
       x_panels_plus = (
           series(detail_panel, x_panels_size, length_offset= padding*2)
@@ -363,12 +461,14 @@ def make_detail_panels(self):
 
 ## Add a Base
 
+* Add a base to resolve overhang on the bottom of the building.
+
 [Code Example 07 - Base](../example/ex_07_base.py)
 
 ### New \_\_init__ Parameters
 
 ``` python
-self.base_height = 2
+self.base_height = 3
 self.base = None
 ```
 
@@ -382,16 +482,30 @@ def make_base(self):
     )
 ```
 
-### Update Build
+### Update make
+``` python
+def make(self):
+    super().make()
+    self.angle =roof.angle(self.inset, self.height)
+
+    self.make_wedge()
+    self.make_interior_rectangle()
+    self.make_cut_panels()
+    self.make_detail_panels()
+    self.make_base()
+```
+
+### Update build
 ``` python
 def build(self):
     super().build()
-
     scene = (
         cq.Workplane("XY")
-        .add(self.wedge)
-        .add(self.panels)
-        .add(self.base)
+        .union(self.wedge)
+        .cut(self.interior_rectangle)
+        .cut(self.cut_panels)
+        .union(self.panels)
+        .union(self.base)
     )
     return scene
 ```
@@ -401,6 +515,8 @@ def build(self):
 ---
 
 ## Make Window Cut
+
+* Create the outline of the windows and remove the spaces where they will reside.
 
 [Code Example 08 - Window Cut](../example/ex_08_window_cut.py)
 
@@ -413,57 +529,73 @@ self.cut_windows = None
 ```
 
 ### Make the cut windows
+
 ``` python
 def make_cut_windows(self):
-    length = self.length-(2*(self.inset+self.wall_width))
-    width = self.width-(2*(self.inset+self.wall_width))
-    height = self.height
-    inset = self.inset
-    p_length = self.panel_length
-    p_width = self.panel_width
-    padding = self.panel_padding
-    cut_width = self.wall_width + inset/2 + self.window_cut_width_padding
-    length_offset = p_length - self.window_length + padding*2
+      length = self.length-(2*(self.inset+self.wall_width))
+      width = self.width-(2*(self.inset+self.wall_width))
+      height = self.height
+      inset = self.inset
+      p_length = self.panel_length
+      p_width = self.panel_width
+      padding = self.panel_padding
+      cut_width = self.wall_width + inset/2 + self.window_cut_width_padding
+      length_offset = p_length - self.window_length + padding*2
 
-    cut_window = cq.Workplane("XY").box(self.window_length, cut_width,self.window_height)
-    x_panels_size = math.floor(length / (p_length + (padding)))
-    y_panels_size = math.floor(width / (p_length + (padding)))
+      cut_window = cq.Workplane("XY").box(self.window_length, cut_width,self.window_height)
+      x_panels_size = math_floor(length / (p_length + (padding)))
+      y_panels_size = math_floor(width / (p_length + (padding)))
 
-    x_win_plus = (
-        series(cut_window, x_panels_size, length_offset=length_offset)
-        .translate((0,((self.width-inset+(padding/2))/2)-cut_width/2, -1*(padding)))
-    )
+      x_win_plus = (
+          series(cut_window, x_panels_size, length_offset=length_offset)
+          .translate((0,((self.width-inset+(padding/2))/2)-cut_width/2, -1*(padding)))
+      )
 
-    x_win_minus = (
-        series(cut_window, x_panels_size, length_offset=length_offset)
-        .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2), -1*(padding)))
-    )
+      x_win_minus = (
+          series(cut_window, x_panels_size, length_offset=length_offset)
+          .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2), -1*(padding)))
+      )
 
-    y_win_plus = (
-        series(cut_window, y_panels_size, length_offset=length_offset)
-        .rotate((0,0,1),(0,0,0),90)
-        .translate((((self.length-inset+(padding/2))/2)-cut_width/2,0,-1*(padding)))
-    )
+      y_win_plus = (
+          series(cut_window, y_panels_size, length_offset=length_offset)
+          .rotate((0,0,1),(0,0,0),90)
+          .translate((((self.length-inset+(padding/2))/2)-cut_width/2,0,-1*(padding)))
+      )
 
-    y_win_minus = (
-        series(cut_window, y_panels_size, length_offset=length_offset)
-        .rotate((0,0,1),(0,0,0),90)
-        .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
-    )
+      y_win_minus = (
+          series(cut_window, y_panels_size, length_offset=length_offset)
+          .rotate((0,0,1),(0,0,0),90)
+          .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
+      )
 
-    self.cut_windows = x_win_plus.add(y_win_plus).add(x_win_minus).add(y_win_minus)
+      self.cut_windows = x_win_plus.add(y_win_plus).add(x_win_minus).add(y_win_minus)
 ```
 
-### Update Build
+### Update make
+``` python
+def make(self):
+    super().make()
+    self.angle =roof.angle(self.inset, self.height)
+
+    self.make_wedge()
+    self.make_interior_rectangle()
+    self.make_cut_panels()
+    self.make_detail_panels()
+    self.make_base()
+    self.make_cut_windows()
+```
+
+### Update build
 ``` python
 def build(self):
     super().build()
-
     scene = (
         cq.Workplane("XY")
-        .add(self.wedge)
-        .add(self.panels)
-        .add(self.base)
+        .union(self.wedge)
+        .cut(self.interior_rectangle)
+        .cut(self.cut_panels)
+        .union(self.panels)
+        .union(self.base)
         .cut(self.cut_windows)
     )
     return scene
@@ -475,12 +607,14 @@ def build(self):
 
 ## Add Window Details
 
+* Create the window frames detail
+
 [Code Example 09 - Window Detail](../example/ex_09_window_detail.py)
 
-### New Import
+### Update Import
 
 ``` python
-from cqterrain import window
+from cqterrain import roof, window
 ```
 
 The code we care about looks like this.
@@ -500,7 +634,7 @@ self.window_frame_chamfer_select = "<Z or >Z"
 self.windows = None
 ```
 
-### Create The Frame
+### Create The Frame Example Implementation
 
 
 ``` python
@@ -513,61 +647,78 @@ frame = frame.faces("Y").edges(self.window_frame_chamfer_select).chamfer(self.wi
 ## Create the windows
 ``` python
 def make_windows(self):
-    length = self.length-(2*(self.inset+self.wall_width))
-    width = self.width-(2*(self.inset+self.wall_width))
-    height = self.height
-    inset = self.inset
-    p_length = self.panel_length
-    p_width = self.panel_width
-    padding = self.panel_padding
-    cut_width = self.wall_width + inset/2 + self.window_cut_width_padding
-    length_offset = p_length - self.window_length + padding*2
+      length = self.length-(2*(self.inset+self.wall_width))
+      width = self.width-(2*(self.inset+self.wall_width))
+      height = self.height
+      inset = self.inset
+      p_length = self.panel_length
+      p_width = self.panel_width
+      padding = self.panel_padding
+      cut_width = self.wall_width + inset/2 + self.window_cut_width_padding
+      length_offset = p_length - self.window_length + padding*2
 
-    frame = window.frame(self.window_length, cut_width, self.window_height, self.window_frame_width)
-    frame = frame.faces("Y").edges("<Z or >Z").chamfer(self.window_frame_chamfer)
-    x_panels_size = math.floor(length / (p_length + (padding)))
-    y_panels_size = math.floor(width / (p_length + (padding)))
+      frame = window.frame(self.window_length, cut_width, self.window_height, self.window_frame_width)
+      frame = frame.faces("Y").edges(self.window_frame_chamfer_select).chamfer(self.window_frame_chamfer)
+      x_panels_size = math_floor(length / (p_length + (padding)))
+      y_panels_size = math_floor(width / (p_length + (padding)))
 
-    x_win_plus = (
-        series(frame, x_panels_size, length_offset=length_offset)
-        .translate((0,((self.width-inset+(padding/2))/2)-cut_width/2, -1*(padding)))
-    )
+      x_win_plus = (
+          series(frame, x_panels_size, length_offset=length_offset)
+          .translate((0,((self.width-inset+(padding/2))/2)-cut_width/2, -1*(padding)))
+      )
 
-    x_win_minus = (
-        series(frame, x_panels_size, length_offset=length_offset)
-        .rotate((0,0,1),(0,0,0),180)
-        .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2), -1*(padding)))
-    )
+      x_win_minus = (
+          series(frame, x_panels_size, length_offset=length_offset)
+          .rotate((0,0,1),(0,0,0),180)
+          .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2), -1*(padding)))
+      )
 
-    y_win_plus = (
-        series(frame, y_panels_size, length_offset=length_offset)
-        .rotate((0,0,1),(0,0,0),90)
-        .translate((((self.length-inset+(padding/2))/2)-cut_width/2,0,-1*(padding)))
-    )
+      y_win_plus = (
+          series(frame, y_panels_size, length_offset=length_offset)
+          .rotate((0,0,1),(0,0,0),90)
+          .translate((((self.length-inset+(padding/2))/2)-cut_width/2,0,-1*(padding)))
+      )
 
-    y_win_minus = (
-        series(frame, y_panels_size, length_offset=length_offset)
-        .rotate((0,0,1),(0,0,0),90)
-        .rotate((0,0,1),(0,0,0),180)
-        .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
-    )
-    self.windows = x_win_plus.add(y_win_plus).add(x_win_minus).add(y_win_minus)
+      y_win_minus = (
+          series(frame, y_panels_size, length_offset=length_offset)
+          .rotate((0,0,1),(0,0,0),90)
+          .rotate((0,0,1),(0,0,0),180)
+          .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,-1*(padding)))
+      )
+      self.windows = x_win_plus.add(y_win_plus).add(x_win_minus).add(y_win_minus)
+```
+
+### Update make
+
+``` python
+def make(self):
+    super().make()
+    self.angle =roof.angle(self.inset, self.height)
+
+    self.make_wedge()
+    self.make_interior_rectangle()
+    self.make_cut_panels()
+    self.make_detail_panels()
+    self.make_base()
+    self.make_cut_windows()
+    self.make_windows()
 ```
 
 
-### Update Build
+### Update build
 
 ``` python
 def build(self):
     super().build()
-
     scene = (
         cq.Workplane("XY")
-        .add(self.wedge)
-        .add(self.panels)
+        .union(self.wedge)
+        .cut(self.interior_rectangle)
+        .cut(self.cut_panels)
+        .union(self.panels)
+        .union(self.base)
         .cut(self.cut_windows)
-        .add(self.base)
-        .add(self.windows)
+        .union(self.windows)
     )
     return scene
 ```
@@ -613,7 +764,7 @@ rec = bp.build()
 
 [Code Example 10 - Skip Windows](../example/ex_10_skip_windows.py)
 
-In order to add a door(s) I need to be able to skip adding the window greebles at certain indexes. I'd like to be able to set an array of windows to skip [0, 2, 4] and consistently not render those details.
+In order to add doors I need to be able to skip adding the windows at certain indexes. I'd like to be able to set an array of windows to skip [0, 2, 4] and consistently not render those details.
 
 ### New \_\_init__ Parameters
 ``` python
@@ -639,7 +790,7 @@ self.windows = scene
 
 ![](image/15.png)
 
-I'm making this look easy, but order in how the solids are added to the workplane and how the solids are rotated matters to have consistent indexes.
+I'm making this look easy, but the ordering in how the solids are added to the workplane and how the solids are rotated matter to have consistent indexes.
 
 ![](image/16.png)
 
@@ -684,8 +835,8 @@ def make_cut_doors(self):
           .edges("|Y").fillet(self.door_fillet)
           .translate((0,0,-1*(height/2 - self.door_height/2)+self.wall_width))
       )
-      x_panels_size = math.floor(length / (p_length + (padding)))
-      y_panels_size = math.floor(width / (p_length + (padding)))
+      x_panels_size = math_floor(length / (p_length + (padding)))
+      y_panels_size = math_floor(width / (p_length + (padding)))
 
       x_plus = (
           series(cut_door, x_panels_size, length_offset=length_offset)
