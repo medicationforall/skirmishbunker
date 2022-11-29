@@ -894,3 +894,171 @@ def build(self):
 ```
 
 ![](image/18.png)
+
+---
+
+## Refactoring
+I have some problems with this code base.<br >
+Chiefly the repeated code all over the place for series management.
+
+``` python
+x_plus = (
+    series(cut_door, x_panels_size, length_offset=length_offset)
+    .translate((0,((self.width-inset+(padding/2))/2)-cut_width/2, 0))
+)
+
+x_minus = (
+    series(cut_door, x_panels_size, length_offset= length_offset)
+    .rotate((0,0,1),(0,0,0),180)
+    .translate((0,-1*(((self.width-inset+(padding/2))/2)-cut_width/2),0))
+)
+
+y_plus = (
+    series(cut_door, y_panels_size, length_offset=length_offset)
+    .rotate((0,0,1),(0,0,0),90)
+    .translate((((self.length-inset+(padding/2))/2)-cut_width/2,0,0))
+)
+
+y_minus = (
+    series(cut_door, y_panels_size, length_offset=length_offset)
+    .rotate((0,0,1),(0,0,0),90)
+    .rotate((0,0,1),(0,0,0),180)
+    .translate((-1*(((self.length-inset+(padding/2))/2)-cut_width/2),0,0))
+)
+
+scene = x_plus.add(y_plus).add(x_minus).add(y_minus)
+```
+
+* Ideally I'd like to place any arbitrary shape in the correct panel locations
+* I'd like to be able to skip creating a solid at a given index
+* I'd like to be able to keep a solid at a given index
+
+### POC Example
+Run the example in a different cqeditor instance.<br />
+[Code Example 12 - Refactoring Series](../example/ex_12_refactoring_series.py)
+
+### Minimal make method
+``` python
+def make_cut_panels(self):
+    cut_panel = (
+        self.make_cut_panel()
+        .rotate((1,0,0),(0,0,0),(self.angle)+90)
+        )
+    self.cut_panels = self.make_series(cut_panel, [0], [0,2, 4, 5, 6, 7, 8])
+```
+
+Does two things
+* Generate the shape
+* Make the series of the given shape
+
+### Make the shape
+``` python
+def make_cut_panel(self):
+    cut_panel = cq.Workplane("XY").box(
+        self.panel_length,
+        self.panel_width, self.height - self.panel_padding
+    )
+    return cut_panel
+```
+
+### Make the series
+
+``` python
+def make_series(self, shape, skip_list=None, keep_list=None):
+        length = self.length-(2*(self.inset+self.wall_width))
+        width = self.width-(2*(self.inset+self.wall_width))
+        padding = self.panel_padding
+        inset = self.inset
+        p_width = self.panel_width
+
+        x_panels_size = math_floor(length / (self.panel_length + self.panel_padding))
+        y_panels_size = math_floor(width / (self.panel_length + self.panel_padding))
+
+        x_plus = (
+            series(shape, x_panels_size, length_offset= padding*2)
+            .translate((0,((self.width-inset+(padding/2))/2)-p_width/2,-1*(padding)))
+        )
+
+        x_minus = (
+            series(shape, x_panels_size, length_offset= padding*2)
+            .rotate((0,0,1),(0,0,0),180)
+            .translate((0,-1*(((self.width-inset+(padding/2))/2)-p_width/2),-1*(padding)))
+        )
+
+        y_plus = (
+            series(shape, y_panels_size, length_offset= padding*2)
+            .rotate((0,0,1),(0,0,0),90)
+            .translate((((self.length-inset+(padding/2))/2)-p_width/2,0,-1*(padding)))
+        )
+
+        y_minus = (
+            series(shape, y_panels_size, length_offset= padding*2)
+            .rotate((0,0,1),(0,0,0),90)
+            .rotate((0,0,1),(0,0,0),180)
+            .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
+        )
+
+        scene = x_plus.add(y_plus).add(x_minus).add(y_minus)
+
+        if skip_list and len(skip_list) > 0:
+            solids = scene.solids().vals()
+            scene = cq.Workplane("XY")
+
+            for  index, solid in enumerate(solids):
+                if index not in skip_list:
+                    scene.add(solid)            
+        elif keep_list and len(keep_list) > 0:
+            solids = scene.solids().vals()
+            scene = cq.Workplane("XY")
+
+            for  index, solid in enumerate(solids):
+                if index in keep_list:
+                    scene.add(solid)
+
+        return scene
+```
+
+This code doesn't seem any shorter but...
+* It's no longer opinionated about the shape.
+* It doesn't care about the angle of the shape.
+* If given a skip list it follows it.
+* If given a keep list it follow it.
+* A skip list beats a keep list
+
+---
+
+## Apply the make_series method
+What was 375 lines got refactored to 257 or a **30%** decrease of the Bunker class.<br /><br />
+Refer to the example to see the full list of changes.<br />
+[Code Example 13 - Series changes Applied](../example/ex_13_series_applied.py)
+
+### Old make_detail_panels
+``` python
+def make_cut_panels(self):
+    cut_panel = cq.Workplane("XY").box(
+        self.panel_length,
+        self.panel_width, self.height - self.panel_padding
+    )
+    cut_panel = (
+        cq.Workplane("XY").box(self.panel_length,self.panel_width, self.height - self.panel_padding)
+        .rotate((1,0,0),(0,0,0),(self.angle)+90)
+    )
+
+    x_translate = ((self.length-self.inset+(self.panel_padding/2))/2)-self.panel_width/2
+    y_translate = ((self.width-self.inset+(self.panel_padding/2))/2)-self.panel_width/2
+    self.cut_panels = self.make_series(cut_panel, length_offset=self.panel_padding*2, x_translate=x_translate,y_translate=y_translate, z_translate=-1*(self.panel_padding))
+```
+
+### New make_detail_panels
+``` python
+def make_detail_panels(self):
+    detail_panel = (
+        self.arch_detail()
+        .rotate((0,1,0),(0,0,0),180)
+        .rotate((1,0,0),(0,0,0),(self.angle)+90)
+    )
+    x_translate = ((self.length-self.inset+(self.panel_padding/2))/2)-self.panel_width/2
+    y_translate = ((self.width-self.inset+(self.panel_padding/2))/2)-self.panel_width/2
+
+    self.panels = self.make_series(detail_panel, length_offset=self.panel_padding*2, x_translate=x_translate, y_translate=y_translate, z_translate=-1*(self.panel_padding))
+```
