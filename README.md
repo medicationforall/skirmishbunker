@@ -1,6 +1,9 @@
 # skirmishbunker
 python Library for making a skirmish wargame bunker
 
+## Documentation
+[Thorough writeup of the development of the bunker](./documentation/README.md)
+
 ## Dependencies
 * [CadQuery 2.1](https://github.com/CadQuery/cadquery)
 * [cqMore](https://github.com/JustinSDK/cqMore)
