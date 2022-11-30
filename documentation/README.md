@@ -1175,3 +1175,81 @@ def make_handle(self):
 ```
 
 ![](./image/19.png)
+
+---
+
+## Integrating The Blast Door
+Add blast door to the bunker model
+
+[Code Example 15 - Add Blast Door](../example/ex_15_add_blast_door.py)
+
+### New \_\_init__ Parameters
+``` python
+self.door_panels = [0,3]
+self.doors = None
+```
+
+### Add The Doors
+``` python
+def make_doors(self):
+    height = self.height
+    bp = BlastDoor()
+    bp.length = self.door_length
+    bp.height = self.door_height
+    bp.make()
+    door = bp.build().translate((0,0,-1*(height/2 - self.door_height/2)+self.wall_width))
+
+    cut_width = self.wall_width + self.inset/2 + self.window_cut_width_padding
+    self.doors = self.make_series(
+        door,
+        length_offset=self.panel_length - self.door_length + self.panel_padding*2,
+        x_translate = ((self.length-self.inset+(self.panel_padding/2))/2)-cut_width/2,
+        y_translate = ((self.width-self.inset+(self.panel_padding/2))/2)-cut_width/2,
+        z_translate=0, skip_list=None, keep_list=self.door_panels
+    )
+```
+
+### Update make
+``` python
+def make(self):
+    super().make()
+    self.angle =roof.angle(self.inset, self.height)
+
+    self.make_wedge()
+    self.make_interior_rectangle()
+    self.make_cut_panels()
+    self.make_detail_panels()
+    self.make_base()
+    self.make_cut_windows()
+    self.make_windows()
+    self.make_cut_doors()
+    self.make_doors()
+```
+
+### Update build
+``` python
+def build(self):
+    super().build()
+    scene = (
+        cq.Workplane("XY")
+        .union(self.wedge)
+        .cut(self.interior_rectangle)
+        .cut(self.cut_panels)
+        .union(self.panels)
+        .cut(self.cut_doors)
+        .union(self.doors)
+        .cut(self.cut_windows)
+        .union(self.windows)
+        .union(self.base)
+    )
+    return scene
+```
+
+![](./image/22.png)
+<br />
+
+![](./image/23.png)
+
+---
+
+### Model The Roof

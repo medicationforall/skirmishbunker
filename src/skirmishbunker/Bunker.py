@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from . import Base
+from .BlastDoor import BlastDoor
 import cadquery as cq
 from cadqueryhelper import shape, series
 from cqterrain import window, roof
@@ -48,7 +49,8 @@ class Bunker(Base):
         self.window_frame_chamfer = 1.6
         self.window_frame_chamfer_select = "<Z or >Z"
         self.skip_windows = [0]
-        self.door_panels = [0]
+
+        self.door_panels = [0,3]
         self.door_length = 23
         self.door_height =35
         self.door_fillet = 4
@@ -60,6 +62,7 @@ class Bunker(Base):
         self.cut_windows = None
         self.cut_doors = None
         self.windows = None
+        self.doors = None
         self.base = None
 
     def make_wedge(self):
@@ -93,25 +96,28 @@ class Bunker(Base):
         x_panels_size = math_floor(length / (self.panel_length + self.panel_padding))
         y_panels_size = math_floor(width / (self.panel_length + self.panel_padding))
 
+        x_shapes = series(shape, x_panels_size, length_offset=length_offset)
+        y_shapes = series(shape, y_panels_size, length_offset=length_offset)
+
         x_plus = (
-            series(shape, x_panels_size, length_offset=length_offset)
+            cq.Workplane("XY").add(x_shapes)
             .translate((0, y_translate, z_translate))
         )
 
         x_minus = (
-            series(shape, x_panels_size, length_offset=length_offset)
+            cq.Workplane("XY").add(x_shapes)
             .rotate((0,0,1),(0,0,0),180)
             .translate((0, -1*y_translate, z_translate))
         )
 
         y_plus = (
-            series(shape, y_panels_size, length_offset=length_offset)
+            cq.Workplane("XY").add(y_shapes)
             .rotate((0,0,1),(0,0,0),90)
             .translate((x_translate, 0, z_translate))
         )
 
         y_minus = (
-            series(shape, y_panels_size, length_offset=length_offset)
+            cq.Workplane("XY").add(y_shapes)
             .rotate((0,0,1),(0,0,0),90)
             .rotate((0,0,1),(0,0,0),180)
             .translate((-1*(x_translate), 0, z_translate))
@@ -144,7 +150,7 @@ class Bunker(Base):
         cut_panel = (
             cq.Workplane("XY").box(self.panel_length,self.panel_width, self.height - self.panel_padding)
             .rotate((1,0,0),(0,0,0),(self.angle)+90)
-        )
+            )
 
         x_translate = ((self.length-self.inset+(self.panel_padding/2))/2)-self.panel_width/2
         y_translate = ((self.width-self.inset+(self.panel_padding/2))/2)-self.panel_width/2
@@ -191,7 +197,7 @@ class Bunker(Base):
             length_offset=self.panel_length - self.window_length + self.panel_padding*2,
             x_translate = ((self.length-inset+(padding/2))/2)-cut_width/2,
             y_translate = ((self.width-inset+(padding/2))/2)-cut_width/2,
-            z_translate=-1*(self.panel_padding), skip_list=self.skip_windows, keep_list=None
+            z_translate=-1*(self.panel_padding), skip_list=self.skip_windows + self.door_panels, keep_list=None
         )
 
     def make_windows(self):
@@ -207,7 +213,7 @@ class Bunker(Base):
             length_offset=self.panel_length - self.window_length + self.panel_padding*2,
             x_translate = ((self.length-inset+(padding/2))/2)-cut_width/2,
             y_translate = ((self.width-inset+(padding/2))/2)-cut_width/2,
-            z_translate=-1*(self.panel_padding), skip_list=self.skip_windows, keep_list=None
+            z_translate=-1*(self.panel_padding), skip_list=self.skip_windows + self.door_panels, keep_list=None
         )
 
     def make_cut_doors(self):
@@ -228,6 +234,23 @@ class Bunker(Base):
             z_translate=0, skip_list=None, keep_list=self.door_panels
         )
 
+    def make_doors(self):
+        height = self.height
+        bp = BlastDoor()
+        bp.length = self.door_length
+        bp.height = self.door_height
+        bp.make()
+        door = bp.build().translate((0,0,-1*(height/2 - self.door_height/2)+self.wall_width))
+
+        cut_width = self.wall_width + self.inset/2 + self.window_cut_width_padding
+        self.doors = self.make_series(
+            door,
+            length_offset=self.panel_length - self.door_length + self.panel_padding*2,
+            x_translate = ((self.length-self.inset+(self.panel_padding/2))/2)-cut_width/2,
+            y_translate = ((self.width-self.inset+(self.panel_padding/2))/2)-cut_width/2,
+            z_translate=0, skip_list=None, keep_list=self.door_panels
+        )
+
     def make(self):
         super().make()
         self.angle =roof.angle(self.inset, self.height)
@@ -240,6 +263,7 @@ class Bunker(Base):
         self.make_cut_windows()
         self.make_windows()
         self.make_cut_doors()
+        self.make_doors()
 
     def build(self):
         super().build()
@@ -250,8 +274,9 @@ class Bunker(Base):
             .cut(self.cut_panels)
             .union(self.panels)
             .cut(self.cut_doors)
+            .union(self.doors)
             .cut(self.cut_windows)
-            .union(self.base)
             .union(self.windows)
+            .union(self.base)
         )
         return scene
