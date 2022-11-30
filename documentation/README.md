@@ -1092,3 +1092,86 @@ def make_detail_panels(self):
 
     self.panels = self.make_series(detail_panel, length_offset=self.panel_padding*2, x_translate=x_translate, y_translate=y_translate, z_translate=-1*(self.panel_padding))
 ```
+
+---
+
+## Model The Blast Door
+I wrote the blast door as separate base class.
+* [Blast Door Code]()
+* [Code Example 14 - Model Blast Door](../example/ex_14_model_blast_door.py)
+
+![](./image/20.png)
+
+The most interesting bits are the detail methods
+
+### Making the locking bars
+
+#### \_\_init__ params
+``` python
+self.bar_height = 3
+self.bar_width = 1
+self.bar_margin_z = 5
+self.bar_margin_x = 1.5
+self.bar_cap_length = 3
+```
+
+#### Bar Detail
+``` python
+def make_locking_bar(self):
+    bar = cq.Workplane("XY").box(self.length-self.bar_margin_x-self.bar_cap_length,self.bar_width,self.bar_height)
+    bar = bar.faces("X or -X").box(self.bar_cap_length, self.bar_width+1, self.bar_height+1)
+    return bar
+```
+
+#### Bar Series
+``` python
+def make_locking_bars(self):
+    bar = self.make_locking_bar()
+
+    offset=self.height-self.bar_height*2- self.bar_margin_z*2
+    bars = series(bar, 2, height_offset =offset)
+
+    y_plus = cq.Workplane("XY").add(bars).translate((0,self.width/2+self.bar_width/2,0))
+    y_minus = cq.Workplane("XY").add(bars).translate((0,-1*(self.width/2+self.bar_width/2),0))
+    result =  cq.Workplane("XY").add(y_plus).add(y_minus)
+
+    self.locking_bars = result
+```
+
+![](./image/21.png)
+
+
+### Making the Handle
+
+#### \_\_init__ params
+``` python
+self.handle_height = 1.5
+self.handle_radius = 4
+self.handle_rotation = -15
+```
+
+#### Handle code
+``` python
+def make_handle(self):
+    '''
+    @todo too many hard coded values
+    '''
+    outline = cq.Workplane("XY").cylinder(self.handle_height,self.handle_radius)
+    interior_cut = cq.Workplane("XY").cylinder(self.handle_height,self.handle_radius-1.5)
+    center = cq.Workplane("XY").cylinder(self.handle_height,1).rotate((1,0,0),(0,0,0),90).faces("-Y").fillet(.3)
+    spoke = cq.Workplane("XY").box(self.handle_radius*2-1, 1, 1).faces("Y or -Y").fillet(.4)
+    handle = (
+        cq.Workplane("XY")
+        .union(outline)
+        .cut(interior_cut)
+        .rotate((1,0,0),(0,0,0),90)
+        .fillet(.5)
+        .union(center)
+        .union(spoke)
+        .union(spoke.rotate((0,1,0),(0,0,0),90))
+    )
+    handle = handle
+    return handle
+```
+
+![](./image/19.png)

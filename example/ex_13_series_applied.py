@@ -79,25 +79,28 @@ class Bunker(Base):
         x_panels_size = math_floor(length / (self.panel_length + self.panel_padding))
         y_panels_size = math_floor(width / (self.panel_length + self.panel_padding))
 
+        x_shapes = series(shape, x_panels_size, length_offset=length_offset)
+        y_shapes = series(shape, y_panels_size, length_offset=length_offset)
+
         x_plus = (
-            series(shape, x_panels_size, length_offset=length_offset)
+            cq.Workplane("XY").add(x_shapes)
             .translate((0, y_translate, z_translate))
         )
 
         x_minus = (
-            series(shape, x_panels_size, length_offset=length_offset)
+            cq.Workplane("XY").add(x_shapes)
             .rotate((0,0,1),(0,0,0),180)
             .translate((0, -1*y_translate, z_translate))
         )
 
         y_plus = (
-            series(shape, y_panels_size, length_offset=length_offset)
+            cq.Workplane("XY").add(y_shapes)
             .rotate((0,0,1),(0,0,0),90)
             .translate((x_translate, 0, z_translate))
         )
 
         y_minus = (
-            series(shape, y_panels_size, length_offset=length_offset)
+            cq.Workplane("XY").add(y_shapes)
             .rotate((0,0,1),(0,0,0),90)
             .rotate((0,0,1),(0,0,0),180)
             .translate((-1*(x_translate), 0, z_translate))
