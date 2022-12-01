@@ -1,5 +1,5 @@
 import cadquery as cq
-from skirmishbunker import Base
+from . import Base
 from cadqueryhelper import series
 
 class BlastDoor(Base):

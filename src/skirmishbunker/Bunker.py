@@ -14,6 +14,7 @@
 
 from . import Base
 from .BlastDoor import BlastDoor
+from .Roof import Roof
 import cadquery as cq
 from cadqueryhelper import shape, series
 from cqterrain import window, roof
@@ -55,6 +56,11 @@ class Bunker(Base):
         self.door_height =35
         self.door_fillet = 4
 
+        self.roof_height = 18
+        self.roof_inset = -3
+        self.roof_overflow = 1
+        self.roof_wall_details_inset = -0.8
+
         self.wedge = None
         self.interior_rectangle = None
         self.panels = None
@@ -64,6 +70,7 @@ class Bunker(Base):
         self.windows = None
         self.doors = None
         self.base = None
+        self.roof = None
 
     def make_wedge(self):
         self.wedge = (
@@ -251,6 +258,18 @@ class Bunker(Base):
             z_translate=0, skip_list=None, keep_list=self.door_panels
         )
 
+    def make_roof(self):
+        length = self.length-(2*(self.inset-self.roof_overflow))
+        width = self.width-(2*(self.inset-self.roof_overflow))
+        bp = Roof()
+        bp.height = self.roof_height
+        bp.length = length
+        bp.width = width
+        bp.inset = self.roof_inset
+        bp.wall_details_inset = self.roof_wall_details_inset
+        bp.make()
+        self.roof=bp.build().translate((0,0, self.height/2+bp.height/2))
+
     def make(self):
         super().make()
         self.angle =roof.angle(self.inset, self.height)
@@ -264,6 +283,7 @@ class Bunker(Base):
         self.make_windows()
         self.make_cut_doors()
         self.make_doors()
+        self.make_roof()
 
     def build(self):
         super().build()
@@ -278,5 +298,6 @@ class Bunker(Base):
             .cut(self.cut_windows)
             .union(self.windows)
             .union(self.base)
+            .union(self.roof)
         )
         return scene
