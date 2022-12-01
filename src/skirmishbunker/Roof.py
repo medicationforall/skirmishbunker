@@ -1,7 +1,7 @@
 import cadquery as cq
 from . import Base
-from cadqueryhelper import series
-from cqterrain import roof
+from cadqueryhelper import series, grid
+from cqterrain import roof, tile
 from math import floor as math_floor
 
 class Roof(Base):
@@ -18,10 +18,13 @@ class Roof(Base):
         self.wall_details_depth = 5
         self.wall_arch_fillet = 2
 
+        self.render_floor_tiles = True
+
         self.outline =None
         self.roof = None
         self.cut_walls = None
         self.wall_details = None
+        self.roof_tiles = None
 
 
     def make_roof(self):
@@ -74,12 +77,38 @@ class Roof(Base):
         #self.wall_details = wall_detail
         self.wall_details = x_plus.add(x_minus).add(y_plus).add(y_minus)
 
+    def make_floor_tiles(self):
+        tile_size = 21
+        tile_padding = 2
+
+        int_length = self.length-(2*(self.inset+self.wall_width))
+        int_width = self.width-(2*(self.inset+self.wall_width))
+
+        tile = cq.Workplane("XY").box(tile_size, tile_size, 2)
+        slot = cq.Workplane("XY").slot2D(tile_size,2).extrude(2).rotate((0,0,1),(0,0,0),45)
+        slot2 = cq.Workplane("XY").slot2D(tile_size-7,2).extrude(2).rotate((0,0,1),(0,0,0),45).translate((-3,-3,0))
+        slot3 = cq.Workplane("XY").slot2D(tile_size-7,2).extrude(2).rotate((0,0,1),(0,0,0),45).translate((3,3,0))
+        slot4 = cq.Workplane("XY").slot2D(tile_size-7-7,2).extrude(2).rotate((0,0,1),(0,0,0),45).translate((-3-3,-3-3,0))
+        slot5 = cq.Workplane("XY").slot2D(tile_size-7-7,2).extrude(2).rotate((0,0,1),(0,0,0),45).translate((3+3,3+3,0))
+
+        tile = tile.cut(slot).cut(slot2).cut(slot3).cut(slot4).cut(slot5)
+
+        columns = math_floor(int_width/(tile_size + tile_padding))
+        rows = math_floor(int_length/(tile_size + tile_padding))
+        tile_grid = grid.make_grid(part=tile, dim = [tile_size + tile_padding, tile_size + tile_padding], columns = columns, rows = rows)
+
+        self.roof_tiles = tile_grid.translate((0,0,-1*((self.height/2)-self.wall_width-1)))
+        #self.roof_tiles = tile_grid
+
     def make(self):
         super().make()
         self.angle =roof.angle(self.inset, self.height)
         self.make_roof()
         self.make_wall_cuts()
         self.make_wall_details()
+
+        if self.render_floor_tiles:
+            self.make_floor_tiles()
 
     def build(self):
         super().make()
@@ -89,4 +118,7 @@ class Roof(Base):
             .cut(self.cut_walls)
             .union(self.wall_details)
         )
+
+        if self.render_floor_tiles:
+            result = result.add(self.roof_tiles)
         return result

@@ -16,8 +16,8 @@ from . import Base
 from .BlastDoor import BlastDoor
 from .Roof import Roof
 import cadquery as cq
-from cadqueryhelper import shape, series
-from cqterrain import window, roof
+from cadqueryhelper import shape, series, grid
+from cqterrain import window, roof, tile
 from math import floor as math_floor
 
 class Bunker(Base):
@@ -61,6 +61,9 @@ class Bunker(Base):
         self.roof_overflow = 1
         self.roof_wall_details_inset = -0.8
 
+        self.render_floor_tiles=True
+        self.render_roof=True
+
         self.wedge = None
         self.interior_rectangle = None
         self.panels = None
@@ -71,6 +74,8 @@ class Bunker(Base):
         self.doors = None
         self.base = None
         self.roof = None
+        self.interior_tiles = None
+        self.roof_tiles = None
 
     def make_wedge(self):
         self.wedge = (
@@ -267,8 +272,24 @@ class Bunker(Base):
         bp.width = width
         bp.inset = self.roof_inset
         bp.wall_details_inset = self.roof_wall_details_inset
+        bp.render_floor_tiles = self.render_floor_tiles
         bp.make()
         self.roof=bp.build().translate((0,0, self.height/2+bp.height/2))
+
+    def make_interior_floor(self):
+        tile_size = 11
+        tile_padding = 1
+        int_length = self.length-(2*(self.inset+self.wall_width))-20
+        int_width = self.width-(2*(self.inset+self.wall_width))-20
+
+        floor_tile = tile.octagon_with_dots(tile_size, 2.4, 3.2, 1)
+
+        #t_height = bounds.zlen
+        columns = math_floor(int_width/(tile_size + tile_padding))
+        rows = math_floor(int_length/(tile_size + tile_padding))
+        tile_grid = grid.make_grid(part=floor_tile, dim = [tile_size + tile_padding, tile_size + tile_padding], columns = columns, rows = rows)
+        self.interior_tiles = tile_grid.translate((0,0,-1*((self.height/2)-self.wall_width-.5)))
+        #self.interior_tiles = tile_grid
 
     def make(self):
         super().make()
@@ -277,13 +298,19 @@ class Bunker(Base):
         self.make_wedge()
         self.make_interior_rectangle()
         self.make_cut_panels()
+        self.make_cut_doors()
         self.make_detail_panels()
         self.make_base()
+        self.make_doors()
         self.make_cut_windows()
         self.make_windows()
-        self.make_cut_doors()
-        self.make_doors()
         self.make_roof()
+
+        if self.render_roof:
+            self.make_roof()
+
+        if self.render_floor_tiles:
+            self.make_interior_floor()
 
     def build(self):
         super().build()
@@ -292,12 +319,41 @@ class Bunker(Base):
             .union(self.wedge)
             .cut(self.interior_rectangle)
             .cut(self.cut_panels)
-            .union(self.panels)
             .cut(self.cut_doors)
+            .union(self.panels)
+            .union(self.base)
             .union(self.doors)
             .cut(self.cut_windows)
             .union(self.windows)
-            .union(self.base)
-            .union(self.roof)
         )
+
+        if self.render_roof:
+            scene = scene.add(self.roof)
+
+        if self.render_floor_tiles:
+            scene = scene.add(self.interior_tiles)
+
+        return scene
+
+    def build_plate(self):
+        super().build()
+        scene = (
+            cq.Workplane("XY")
+            .union(self.wedge)
+            .cut(self.interior_rectangle)
+            .cut(self.cut_panels)
+            .cut(self.cut_doors)
+            .union(self.panels)
+            .union(self.base)
+            .union(self.doors)
+            .cut(self.cut_windows)
+            .union(self.windows)
+        )
+
+        if self.render_roof:
+            scene = scene.add(self.roof.translate((self.length,0,-1*(self.height+self.base_height))))
+
+        if self.render_floor_tiles:
+            scene = scene.add(self.interior_tiles)
+
         return scene

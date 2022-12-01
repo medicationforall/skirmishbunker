@@ -9,6 +9,11 @@ https://www.pinterest.com/pin/bunker-part-2--483855553698959743/
 ![](https://i.pinimg.com/originals/03/13/93/031393ff27641fc9b0f084084672d858.jpg)
 
 ---
+## What We're Going To Build
+
+![](./image/cover.png)
+
+---
 ## All Your Base
 [src code](../src/skirmishbunker/Base.py)
 
@@ -39,7 +44,6 @@ class Base:
     def dimensions(self):
         return (self.length, self.width, self.height)
 ```
-
 ---
 
 ## Making The Outline
@@ -1097,7 +1101,7 @@ def make_detail_panels(self):
 
 ## Model The Blast Door
 I wrote the blast door as separate base class.
-* [Blast Door Code]()
+* [Blast Door Code](../src/skirmishbunker/BlastDoor.py)
 * [Code Example 14 - Model Blast Door](../example/ex_14_model_blast_door.py)
 
 ![](./image/20.png)
@@ -1252,4 +1256,225 @@ def build(self):
 
 ---
 
-### Model The Roof
+## Model The Roof
+The Roof is written as a separate base class.
+
+* [Roof Code](../src/skirmishbunker/Roof.py)
+* [Code Example 16 - Model Roof](../example/ex_16_model_roof.py)
+
+### Make The Roof Outline
+``` python
+def make_roof(self):
+    self.outline = (
+        cq.Workplane("XY" )
+        .wedge(self.length,self.height,self.width,self.inset,self.inset,self.length-self.inset,self.width-self.inset)
+        .rotate((1,0,0),(0,0,0),-90)
+    )
+
+    self.roof = (
+        cq.Workplane("XY")
+        .add(self.outline)
+        .faces("Z").shell(-1*self.wall_width)
+    )
+```
+
+Uses shell operation to cut out the interior.
+
+![](./image/26.png)
+
+### Make Detail Cuts
+``` python
+def make_wall_cuts(self):
+    x_size = math_floor((self.length-self.inset*2) / 24)*24
+    y_size = math_floor((self.width-self.inset*2) / 24)*24
+
+    x_cut = cq.Workplane("XY").box(x_size,self.wall_details_depth,self.height)
+    y_cut = cq.Workplane("XY").box(self.wall_details_depth, y_size,self.height)
+    inset = self.wall_details_inset
+
+    x_plus = cq.Workplane("XY").add(y_cut).translate(((self.length/2 - 4/2)-inset,0,0))
+    x_minus = cq.Workplane("XY").add(y_cut).rotate((0,0,1),(0,0,0),180).translate((-1*(self.length/2 - 4/2)+inset,0,0))
+
+    y_plus = cq.Workplane("XY").add(x_cut).translate((0,(self.width/2 - 4/2)-inset,0))
+    y_minus = cq.Workplane("XY").add(x_cut).rotate((0,0,1),(0,0,0),180).translate((0,-1*(self.width/2 - 4/2)+inset,0))
+
+    self.cut_walls = x_plus.add(x_minus).add(y_plus).add(y_minus)
+```
+
+![](./image/28.png)
+
+#### Cut From The Roof
+``` python
+def build(self):
+    super().make()
+    result = (
+        cq.Workplane("XY")
+        .union(self.roof)
+        .cut(self.cut_walls)
+    )
+    return result
+```
+
+![](./image/27.png)
+
+### Make Roof Details
+
+ ``` python
+ def make_wall_details(self):
+        detail = cq.Workplane("XY").box(20,self.wall_details_depth,self.height).faces("X or -X").box(4, self.wall_details_depth+1, self.height)
+        arch = cq.Workplane("XY").box(20-self.wall_details_depth,5,((self.height+1) /4)*3).faces("Z").edges("Y").fillet(self.wall_arch_fillet)
+        wall_detail = detail.cut(arch)
+        x_size = math_floor((self.length-self.inset*2) / 24)
+        y_size = math_floor((self.width-self.inset*2) / 24)
+
+        inset = self.wall_details_inset
+
+        x_series = series(wall_detail, x_size, length_offset=0)
+        y_series = series(wall_detail, y_size, length_offset=0).rotate((0,0,1),(0,0,0),90)
+
+        x_plus = cq.Workplane("XY").add(y_series).translate(((self.length/2 - 4/2)-inset,0,0))
+        x_minus = cq.Workplane("XY").add(y_series).rotate((0,0,1),(0,0,0),180).translate((-1*(self.length/2 - 4/2)+inset,0,0))
+
+        y_plus = cq.Workplane("XY").add(x_series).translate((0,(self.width/2 - 4/2)-inset,0))
+        y_minus = cq.Workplane("XY").add(x_series).rotate((0,0,1),(0,0,0),180).translate((0,-1*(self.width/2 - 4/2)+inset,0))
+
+        #self.wall_details = wall_detail
+        self.wall_details = x_plus.add(x_minus).add(y_plus).add(y_minus)
+ ```
+
+#### Individual detail
+ ![](image/29.png)
+
+#### Detail series
+ ![](image/30.png)
+
+### make Method
+``` python
+def make(self):
+    super().make()
+    self.angle =roof.angle(self.inset, self.height)
+    self.make_roof()
+    self.make_wall_cuts()
+    self.make_wall_details()
+```
+
+### build Method
+``` python
+def build(self):
+    super().make()
+    result = (
+        cq.Workplane("XY")
+        .union(self.roof)
+        .cut(self.cut_walls)
+        .union(self.wall_details)
+    )
+    return result
+```
+
+![](./image/25.png)
+
+---
+## Add Bunker Roof
+Give the bunker a roof.
+
+[Code Example 17- Add Roof](../example/ex_17_add_roof.py)
+
+#### \_\_init__ params
+``` python
+self.roof_height = 18
+self.roof_inset = -3
+self.roof_overflow = 1
+self.roof_wall_details_inset = -0.8
+self.roof = None
+```
+
+### Add the Roof
+``` python
+def make_roof(self):
+    length = self.length-(2*(self.inset-self.roof_overflow))
+    width = self.width-(2*(self.inset-self.roof_overflow))
+    bp = Roof()
+    bp.height = self.roof_height
+    bp.length = length
+    bp.width = width
+    bp.inset = self.roof_inset
+    bp.wall_details_inset = self.roof_wall_details_inset
+    bp.make()
+    self.roof=bp.build().translate((0,0, self.height/2+bp.height/2))
+```
+
+## Update make
+``` python
+def make(self):
+    super().make()
+    self.angle =roof.angle(self.inset, self.height)
+
+    self.make_wedge()
+    self.make_interior_rectangle()
+    self.make_cut_panels()
+    self.make_detail_panels()
+    self.make_base()
+    self.make_cut_windows()
+    self.make_windows()
+    self.make_cut_doors()
+    self.make_doors()
+    self.make_roof()
+```
+
+## Update build
+``` python
+def build(self):
+    super().build()
+    scene = (
+        cq.Workplane("XY")
+        .union(self.wedge)
+        .cut(self.interior_rectangle)
+        .cut(self.cut_panels)
+        .union(self.panels)
+        .cut(self.cut_doors)
+        .union(self.doors)
+        .cut(self.cut_windows)
+        .union(self.windows)
+        .union(self.base)
+        .union(self.roof)
+    )
+    return scene
+```
+
+### Updated make values.
+Now that there is a roof; I can better align with my sample mini (cylinder).
+In turn I updated my dimensions.
+
+``` python
+bp = Bunker()
+bp.inset=15
+bp.width=140
+bp.length=110
+bp.height=65
+bp.window_length = 18
+bp.window_height = 8
+bp.window_frame_chamfer = 1.6
+bp.window_frame_chamfer_select = "<Z"
+bp.make()
+rec = bp.build()
+
+show_object(rec)
+
+mini = cq.Workplane("XY").cylinder(32, 12.5).translate((0,89,-1*((68/2))+(32/2)-1.5))
+show_object(mini)
+```
+
+I chose to make the roof inset negative which means the overhang juts out.
+
+![](image/31.png)
+
+---
+
+This is a good dropping off point, I've modeled enough details to have a passable bunker that can be printed.<br />
+Everything beyond this is gravy.
+
+---
+## Interior Floor
+Luckily modeling floors has been proven out in other projects.
+
+### Model the floor

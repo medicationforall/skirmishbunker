@@ -1,7 +1,7 @@
 # skirmishbunker
 python Library for making a skirmish wargame bunker
 
-![](./documentation/image/24.png)
+![](./documentation/image/cover.png)
 
 ## Documentation
 [Thorough writeup of the development of the bunker](./documentation/README.md)
