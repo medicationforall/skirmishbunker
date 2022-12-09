@@ -1,5 +1,5 @@
 import cadquery as cq
-from skirmishbunker import Bunker
+from skirmishbunker import Bunker, Roof
 
 bp = Bunker()
 bp.inset=15
@@ -29,12 +29,24 @@ bp2.window_frame_chamfer = 1.6
 bp2.window_frame_chamfer_select = "<Z"
 bp2.door_panels = [0]
 bp2.render_floor_tiles=True
-bp2.render_roof=True
+bp2.render_roof=False
 bp2.make()
 floor_2  = bp2.build()
+
+bp = Roof()
+bp.length = 80
+bp.width = 80
+bp.height = 18
+bp.inset = -3
+bp.wall_details_inset = -0.8
+bp.render_floor_tiles = True
+bp.make()
+roof_ex = bp.build()
 
 scene = cq.Workplane("XY").add(floor_1).add(floor_2.translate((0,0,80)))
 
 #show_object(scene)
 
-cq.exporters.export(scene,'stl/tower.stl')
+cq.exporters.export(floor_1,'stl/tower_1.stl')
+cq.exporters.export(floor_2,'stl/tower_2.stl')
+cq.exporters.export(roof_ex,'stl/tower_roof.stl')

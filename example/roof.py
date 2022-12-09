@@ -2,9 +2,9 @@ import cadquery as cq
 from skirmishbunker import Roof
 
 bp = Roof()
-bp.length = 110
-bp.width = 140
-bp.height = 20
+bp.length = 82
+bp.width = 112
+bp.height = 18
 bp.inset = -3
 bp.wall_details_inset = -0.8
 bp.render_floor_tiles = True

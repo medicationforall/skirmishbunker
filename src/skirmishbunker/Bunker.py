@@ -266,6 +266,9 @@ class Bunker(Base):
     def make_roof(self):
         length = self.length-(2*(self.inset-self.roof_overflow))
         width = self.width-(2*(self.inset-self.roof_overflow))
+
+        print('roof length', length)
+        print ('roof width', width)
         bp = Roof()
         bp.height = self.roof_height
         bp.length = length
@@ -304,7 +307,6 @@ class Bunker(Base):
         self.make_doors()
         self.make_cut_windows()
         self.make_windows()
-        self.make_roof()
 
         if self.render_roof:
             self.make_roof()
