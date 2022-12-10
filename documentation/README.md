@@ -1470,12 +1470,12 @@ I chose to make the roof inset negative which means the overhang juts out.
 
 ---
 ## Interior Tile Proof of Concept
-Explanation of how the floor pattern is seeded.
+Luckily modeling the floor tile has been proven out in other projects.<br />
 
 [Example 18a - Tile POC](../example/ex_18a_tile_poc.py)
 
 ### cqterrain tile.octagon_with_dots
-Part of the terrain library that I wrote here is the code for the individual floor tile, that I'm using for the bunker.
+Part of the [terrain library](https://github.com/medicationforall/cqterrain) that I wrote here is the code for the individual floor tile, that I'm using for the bunker.
 
 ``` python
 def octagon_with_dots(tile_size=5, chamfer_size = 1.2, mid_tile_size =1.6, spacing = .5 ):
@@ -1504,8 +1504,7 @@ def octagon_with_dots(tile_size=5, chamfer_size = 1.2, mid_tile_size =1.6, spaci
 ![](image/32.png)<br />
 
 ---
-## Interior Floor
-Luckily modeling floors has been proven out in other projects.
+## Adding Interior Floor To The Bunker
 
 [Example 18b - Internal Floor](../example/ex_18b_int_floor.py)
 
@@ -1592,7 +1591,7 @@ def build(self):
 ```
 
 
-### Update make values.
+### Update Instance Values
 
 ``` python
 bp = Bunker()
@@ -1617,11 +1616,124 @@ show_object(rec)
 ![](image/33.png)<br />
 
 
+---
+## Roof Tile Proof Of Concept
+This code hasn't been standardized into a library yet.
+
+[Example 19a - Roof Tile POC](../example/ex_19a_roof_tile_poc.py)
+
+``` python
+import cadquery as cq
+
+tile_size = 21
+tile_padding = 2
+
+tile = cq.Workplane("XY").box(tile_size, tile_size, 2)
+slot = cq.Workplane("XY").slot2D(tile_size,2).extrude(2).rotate((0,0,1),(0,0,0),45)
+slot2 = cq.Workplane("XY").slot2D(tile_size-7,2).extrude(2).rotate((0,0,1),(0,0,0),45).translate((-3,-3,0))
+slot3 = cq.Workplane("XY").slot2D(tile_size-7,2).extrude(2).rotate((0,0,1),(0,0,0),45).translate((3,3,0))
+slot4 = cq.Workplane("XY").slot2D(tile_size-7-7,2).extrude(2).rotate((0,0,1),(0,0,0),45).translate((-3-3,-3-3,0))
+slot5 = cq.Workplane("XY").slot2D(tile_size-7-7,2).extrude(2).rotate((0,0,1),(0,0,0),45).translate((3+3,3+3,0))
+
+tile = tile.cut(slot).cut(slot2).cut(slot3).cut(slot4).cut(slot5)
+
+show_object(tile)
+```
+
+![](image/34.png)<br />
 
 ---
-## Roof Tile
+## Add Roof Tiles
+Modify the roof class to add floor tiles.
 
-[Example 19 - Roof Tile](../example/ex_19_roof_tile.py)
+[Example 19b - Roof Tile](../example/ex_19_roof_tile.py)
+
+### Update Imports
+
+``` python
+from cadqueryhelper import shape, series, grid
+from cqterrain import window, roof, tile
+```
+
+### New \_\_init__ Parameters
+``` python
+  self.render_floor_tiles = True
+  self.roof_tiles = None
+```
+
+### Make The Floor Tiles
+
+``` python
+def make_floor_tiles(self):
+    tile_size = 21
+    tile_padding = 2
+
+    int_length = self.length-(2*(self.inset+self.wall_width))
+    int_width = self.width-(2*(self.inset+self.wall_width))
+
+    tile = cq.Workplane("XY").box(tile_size, tile_size, 2)
+    slot = cq.Workplane("XY").slot2D(tile_size,2).extrude(2).rotate((0,0,1),(0,0,0),45)
+    slot2 = cq.Workplane("XY").slot2D(tile_size-7,2).extrude(2).rotate((0,0,1),(0,0,0),45).translate((-3,-3,0))
+    slot3 = cq.Workplane("XY").slot2D(tile_size-7,2).extrude(2).rotate((0,0,1),(0,0,0),45).translate((3,3,0))
+    slot4 = cq.Workplane("XY").slot2D(tile_size-7-7,2).extrude(2).rotate((0,0,1),(0,0,0),45).translate((-3-3,-3-3,0))
+    slot5 = cq.Workplane("XY").slot2D(tile_size-7-7,2).extrude(2).rotate((0,0,1),(0,0,0),45).translate((3+3,3+3,0))
+
+    tile = tile.cut(slot).cut(slot2).cut(slot3).cut(slot4).cut(slot5)
+
+    columns = math_floor(int_width/(tile_size + tile_padding))
+    rows = math_floor(int_length/(tile_size + tile_padding))
+    tile_grid = grid.make_grid(part=tile, dim = [tile_size + tile_padding, tile_size + tile_padding], columns = columns, rows = rows)
+
+    self.roof_tiles = tile_grid.translate((0,0,-1*((self.height/2)-self.wall_width-1)))
+    #self.roof_tiles = tile_grid
+```
+
+### Update make
+``` python
+def make(self):
+    super().make()
+    self.angle =roof.angle(self.inset, self.height)
+    self.make_roof()
+    self.make_wall_cuts()
+    self.make_wall_details()
+
+    if self.render_floor_tiles:
+        self.make_floor_tiles()
+```
+
+### Update build
+``` python
+def build(self):
+    super().make()
+    result = (
+        cq.Workplane("XY")
+        .union(self.roof)
+        .cut(self.cut_walls)
+        .union(self.wall_details)
+    )
+
+    if self.render_floor_tiles:
+        result = result.add(self.roof_tiles)
+    return result
+```
+
+### Update Instance Values
+
+``` python
+bp = Roof()
+bp.length = 110
+bp.width = 140
+bp.height = 20
+bp.inset = -3
+bp.wall_details_inset = -0.8
+bp.render_floor_tiles = True
+bp.make()
+roof = bp.build()
+```
+
+![](image/35.png)<br />
+
+
 
 ---
 
