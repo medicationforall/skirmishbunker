@@ -63,6 +63,8 @@ class Bunker(Base):
 
         self.render_floor_tiles=True
         self.render_roof=True
+        self.render_doors=True
+        self.render_windows=True
 
         self.wedge = None
         self.interior_rectangle = None
@@ -301,12 +303,16 @@ class Bunker(Base):
         self.make_wedge()
         self.make_interior_rectangle()
         self.make_cut_panels()
-        self.make_cut_doors()
         self.make_detail_panels()
         self.make_base()
-        self.make_doors()
-        self.make_cut_windows()
-        self.make_windows()
+
+        if self.render_windows:
+            self.make_cut_windows()
+            self.make_windows()
+
+        if self.render_doors:
+            self.make_cut_doors()
+            self.make_doors()
 
         if self.render_roof:
             self.make_roof()
@@ -321,13 +327,15 @@ class Bunker(Base):
             .union(self.wedge)
             .cut(self.interior_rectangle)
             .cut(self.cut_panels)
-            .cut(self.cut_doors)
             .union(self.panels)
             .union(self.base)
-            .union(self.doors)
-            .cut(self.cut_windows)
-            .union(self.windows)
         )
+
+        if self.render_windows:
+            scene = scene.cut(self.cut_windows).union(self.windows)
+
+        if self.render_doors:
+            scene = scene.cut(self.cut_doors).union(self.doors)
 
         if self.render_roof:
             scene = scene.add(self.roof)
@@ -344,13 +352,15 @@ class Bunker(Base):
             .union(self.wedge)
             .cut(self.interior_rectangle)
             .cut(self.cut_panels)
-            .cut(self.cut_doors)
             .union(self.panels)
             .union(self.base)
-            .union(self.doors)
-            .cut(self.cut_windows)
-            .union(self.windows)
         )
+
+        if self.render_windows:
+            scene = scene.cut(self.cut_windows).union(self.windows)
+
+        if self.render_doors:
+            scene = scene.cut(self.cut_doors).union(self.doors)
 
         if self.render_roof:
             scene = scene.add(self.roof.translate((self.length,0,-1*(self.height+self.base_height))))
