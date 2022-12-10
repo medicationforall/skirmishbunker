@@ -1554,7 +1554,6 @@ def make(self):
     self.make_doors()
     self.make_cut_windows()
     self.make_windows()
-    self.make_roof()
 
     if self.render_roof:
         self.make_roof()
@@ -1742,6 +1741,54 @@ Added another lifecycle method called **build_plate**. With the idea being that 
 And **build_plate** for the physical print built of the individual parts.
 
 [Example 20 - Build Plate](../example/ex_20_build_plate.py)
+
+
+### Update make_roof
+``` python
+def make_roof(self):
+    length = self.length-(2*(self.inset-self.roof_overflow))
+    width = self.width-(2*(self.inset-self.roof_overflow))
+
+    print('roof length', length)
+    print ('roof width', width)
+    bp = Roof()
+    bp.height = self.roof_height
+    bp.length = length
+    bp.width = width
+    bp.inset = self.roof_inset
+    bp.wall_details_inset = self.roof_wall_details_inset
+    bp.render_floor_tiles = self.render_floor_tiles
+    bp.make()
+    self.roof=bp.build().translate((0,0, self.height/2+bp.height/2))
+```
+
+### Add build_plate methods
+``` python
+def build_plate(self):
+    super().build()
+    scene = (
+        cq.Workplane("XY")
+        .union(self.wedge)
+        .cut(self.interior_rectangle)
+        .cut(self.cut_panels)
+        .cut(self.cut_doors)
+        .union(self.panels)
+        .union(self.base)
+        .union(self.doors)
+        .cut(self.cut_windows)
+        .union(self.windows)
+    )
+
+    if self.render_roof:
+        scene = scene.add(self.roof.translate((self.length,0,-1*(self.height+self.base_height))))
+
+    if self.render_floor_tiles:
+        scene = scene.add(self.interior_tiles)
+
+    return scene
+```
+
+![](image/36.png)<br />
 
 ---
 ## Feature Toggles

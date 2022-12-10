@@ -79,7 +79,6 @@ class Bunker(Base):
         self.base = None
         self.roof = None
         self.interior_tiles = None
-        self.roof_tiles = None
         self.ladders = None
 
     def make_wedge(self):

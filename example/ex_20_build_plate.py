@@ -59,7 +59,6 @@ class Bunker(Base):
         self.base = None
         self.roof = None
         self.interior_tiles = None
-        self.roof_tiles = None
 
     def make_wedge(self):
         self.wedge = (
@@ -271,12 +270,10 @@ class Bunker(Base):
 
         floor_tile = tile.octagon_with_dots(tile_size, 2.4, 3.2, 1)
 
-        #t_height = bounds.zlen
         columns = math_floor(int_width/(tile_size + tile_padding))
         rows = math_floor(int_length/(tile_size + tile_padding))
         tile_grid = grid.make_grid(part=floor_tile, dim = [tile_size + tile_padding, tile_size + tile_padding], columns = columns, rows = rows)
         self.interior_tiles = tile_grid.translate((0,0,-1*((self.height/2)-self.wall_width-.5)))
-        #self.interior_tiles = tile_grid
 
     def make(self):
         super().make()

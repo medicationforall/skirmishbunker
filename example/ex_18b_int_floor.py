@@ -284,7 +284,6 @@ class Bunker(Base):
         self.make_doors()
         self.make_cut_windows()
         self.make_windows()
-        self.make_roof()
 
         if self.render_roof:
             self.make_roof()
