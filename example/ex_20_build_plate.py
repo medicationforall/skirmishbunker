@@ -310,36 +310,17 @@ class Bunker(Base):
             .union(self.windows)
         )
 
-        if self.render_roof:
-            scene = scene.add(self.roof)
-
         if self.render_floor_tiles:
             scene = scene.add(self.interior_tiles)
+
+        if self.render_roof:
+            scene = scene.add(self.roof)
 
         return scene
 
     def build_plate(self):
-        super().build()
-        scene = (
-            cq.Workplane("XY")
-            .union(self.wedge)
-            .cut(self.interior_rectangle)
-            .cut(self.cut_panels)
-            .cut(self.cut_doors)
-            .union(self.panels)
-            .union(self.base)
-            .union(self.doors)
-            .cut(self.cut_windows)
-            .union(self.windows)
-        )
-
-        if self.render_roof:
-            scene = scene.add(self.roof.translate((self.length,0,-1*(self.height+self.base_height))))
-
-        if self.render_floor_tiles:
-            scene = scene.add(self.interior_tiles)
-
-        return scene
+        self.roof = self.roof.translate((self.length,0,-1*(self.height+self.base_height)))
+        return self.build()
 
 bp = Bunker()
 bp.inset=15
