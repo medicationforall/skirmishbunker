@@ -17,7 +17,7 @@ https://www.pinterest.com/pin/bunker-part-2--483855553698959743/
 ## All Your Base
 [src code](../src/skirmishbunker/Base.py)
 
-**Base** is the class parent class that the project will inherit from.<br />
+**Base** is the class parent that the project will inherit from.<br />
 There are two lifecycle methods **make** and **build**. For all intents **base** derived classes are factories for making cadquery solids.
 
 * **make** creates the parts off of class parameter values.
@@ -1469,12 +1469,177 @@ I chose to make the roof inset negative which means the overhang juts out.
 ![](image/31.png)
 
 ---
+## Interior Tile Proof of Concept
+Explanation of how the floor pattern is seeded.
 
-This is a good dropping off point, I've modeled enough details to have a passable bunker that can be printed.<br />
-Everything beyond this is gravy.
+[Example 18a - Tile POC](../example/ex_18a_tile_poc.py)
+
+### cqterrain tile.octagon_with_dots
+Part of the terrain library that I wrote here is the code for the individual floor tile, that I'm using for the bunker.
+
+``` python
+def octagon_with_dots(tile_size=5, chamfer_size = 1.2, mid_tile_size =1.6, spacing = .5 ):
+    tile = (cq.Workplane("XY")
+            .rect(tile_size,tile_size)
+            .extrude(1)
+            .edges("|Z")
+            .chamfer(chamfer_size) # SET PERCENTAGE
+            )
+
+    rotated_tile = tile.rotate((0,0,1),(0,0,0), 45)
+
+    mid_tile = (cq.Workplane("XY")
+            .rect(mid_tile_size, mid_tile_size)
+            .extrude(1)
+            .rotate((0,0,1),(0,0,0), 45)
+            )
+
+    tiles = grid.make_grid(tile, [tile_size + spacing,tile_size + spacing], rows=3, columns=3)
+    center_tiles = grid.make_grid(mid_tile, [tile_size + spacing, tile_size + spacing], rows=4, columns=4)
+
+    combined = tiles.add(center_tiles).translate((0,0,-1*(1/2)))
+    return combined
+```
+
+![](image/32.png)<br />
 
 ---
 ## Interior Floor
 Luckily modeling floors has been proven out in other projects.
 
-### Model the floor
+[Example 18b - Internal Floor](../example/ex_18b_int_floor.py)
+
+### Update Imports
+
+``` python
+from cadqueryhelper import shape, series, grid
+from cqterrain import window, roof, tile
+```
+
+### New \_\_init__ Parameters
+``` python
+  self.render_floor_tiles=True
+  self.render_roof=True
+  self.interior_tiles = None
+```
+
+### Make the floor
+
+``` python
+def make_interior_floor(self):
+      tile_size = 11
+      tile_padding = 1
+      int_length = self.length-(2*(self.inset+self.wall_width))-20
+      int_width = self.width-(2*(self.inset+self.wall_width))-20
+
+      floor_tile = tile.octagon_with_dots(tile_size, 2.4, 3.2, 1)
+
+      columns = math_floor(int_width/(tile_size + tile_padding))
+      rows = math_floor(int_length/(tile_size + tile_padding))
+      tile_grid = grid.make_grid(part=floor_tile, dim = [tile_size + tile_padding, tile_size + tile_padding], columns = columns, rows = rows)
+      self.interior_tiles = tile_grid.translate((0,0,-1*((self.height/2)-self.wall_width-.5)))
+```
+
+### Update make
+``` python
+def make(self):
+    super().make()
+    self.angle =roof.angle(self.inset, self.height)
+
+    self.make_wedge()
+    self.make_interior_rectangle()
+    self.make_cut_panels()
+    self.make_cut_doors()
+    self.make_detail_panels()
+    self.make_base()
+    self.make_doors()
+    self.make_cut_windows()
+    self.make_windows()
+    self.make_roof()
+
+    if self.render_roof:
+        self.make_roof()
+
+    if self.render_floor_tiles:
+        self.make_interior_floor()
+```
+
+### Update Build
+
+``` python
+def build(self):
+    super().build()
+    scene = (
+        cq.Workplane("XY")
+        .union(self.wedge)
+        .cut(self.interior_rectangle)
+        .cut(self.cut_panels)
+        .cut(self.cut_doors)
+        .union(self.panels)
+        .union(self.base)
+        .union(self.doors)
+        .cut(self.cut_windows)
+        .union(self.windows)
+    )
+
+    if self.render_roof:
+        scene = scene.add(self.roof)
+
+    if self.render_floor_tiles:
+        scene = scene.add(self.interior_tiles)
+
+    return scene
+```
+
+
+### Update make values.
+
+``` python
+bp = Bunker()
+bp.inset=15
+bp.width=140
+bp.length=110
+bp.height=65
+bp.window_length = 18
+bp.window_height = 8
+bp.window_frame_chamfer = 1.6
+bp.window_frame_chamfer_select = "<Z"
+bp.render_floor_tiles=True
+bp.render_roof=False
+bp.make()
+rec = bp.build()
+
+show_object(rec)
+```
+
+*Note I turn off the roof rendering for this example.
+
+![](image/33.png)<br />
+
+
+
+---
+## Roof Tile
+
+[Example 19 - Roof Tile](../example/ex_19_roof_tile.py)
+
+---
+
+## Build Plate
+Added another lifecycle method called **build_plate**. With the idea being that you have **build** for the assembled build.
+And **build_plate** for the physical print built of the individual parts.
+
+[Example 20 - Build Plate](../example/ex_20_build_plate.py)
+
+---
+## Feature Toggles
+
+The Builds are starting to get heavy and to enable testing in isolation I added feature toggles to disable / enable details of the bunker.
+
+[Example 21 - Feature Toggles](../example/ex_21_feature_toggles.py)
+
+
+--
+## Ladders
+
+Added the ladder interior detail part.

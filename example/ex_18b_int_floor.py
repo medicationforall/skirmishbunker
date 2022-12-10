@@ -266,12 +266,10 @@ class Bunker(Base):
 
         floor_tile = tile.octagon_with_dots(tile_size, 2.4, 3.2, 1)
 
-        #t_height = bounds.zlen
         columns = math_floor(int_width/(tile_size + tile_padding))
         rows = math_floor(int_length/(tile_size + tile_padding))
         tile_grid = grid.make_grid(part=floor_tile, dim = [tile_size + tile_padding, tile_size + tile_padding], columns = columns, rows = rows)
         self.interior_tiles = tile_grid.translate((0,0,-1*((self.height/2)-self.wall_width-.5)))
-        #self.interior_tiles = tile_grid
 
     def make(self):
         super().make()
@@ -293,8 +291,6 @@ class Bunker(Base):
 
         if self.render_floor_tiles:
             self.make_interior_floor()
-
-
 
     def build(self):
         super().build()
@@ -319,29 +315,6 @@ class Bunker(Base):
 
         return scene
 
-    def build_plate(self):
-        super().build()
-        scene = (
-            cq.Workplane("XY")
-            .union(self.wedge)
-            .cut(self.interior_rectangle)
-            .cut(self.cut_panels)
-            .cut(self.cut_doors)
-            .union(self.panels)
-            .union(self.base)
-            .union(self.doors)
-            .cut(self.cut_windows)
-            .union(self.windows)
-        )
-
-        if self.render_roof:
-            scene = scene.add(self.roof.translate((self.length,0,-1*(self.height+self.base_height))))
-
-        if self.render_floor_tiles:
-            scene = scene.add(self.interior_tiles)
-
-        return scene
-
 bp = Bunker()
 bp.inset=15
 bp.width=140
@@ -352,10 +325,9 @@ bp.window_height = 8
 bp.window_frame_chamfer = 1.6
 bp.window_frame_chamfer_select = "<Z"
 bp.render_floor_tiles=True
-bp.render_roof=True
+bp.render_roof=False
 bp.make()
-#rec = bp.build()
-rec = bp.build_plate()
+rec = bp.build()
 
 show_object(rec)
 

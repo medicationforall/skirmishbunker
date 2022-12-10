@@ -18,7 +18,7 @@ class Roof(Base):
         self.wall_details_depth = 5
         self.wall_arch_fillet = 2
 
-        self.render_floor_tiles = True
+        self.render_floor_tiles = False
 
         self.outline =None
         self.roof = None
