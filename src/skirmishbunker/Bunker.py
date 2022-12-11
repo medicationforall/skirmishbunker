@@ -17,7 +17,7 @@ from .BlastDoor import BlastDoor
 from .Roof import Roof
 import cadquery as cq
 from cadqueryhelper import shape, series, grid
-from cqterrain import window, roof, tile
+from cqterrain import window, roof, tile, Ladder
 from math import floor as math_floor
 
 class Bunker(Base):
