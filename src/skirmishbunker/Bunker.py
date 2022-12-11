@@ -202,6 +202,17 @@ class Bunker(Base):
 
         self.panels = self.make_series(detail_panel, length_offset=self.panel_padding*2, x_translate=x_translate, y_translate=y_translate, z_translate=-1*(self.panel_padding))
 
+    def resolve_window_skip(self):
+        skip_list = [] + self.skip_windows
+
+        if self.render_doors:
+            skip_list + door_panels
+
+        if self.render_ladders:
+            skip_list + ladder_panels
+
+        return skip_list
+
     def make_cut_windows(self):
         height = self.height
         cut_width = self.wall_width + self.inset/2 + self.window_cut_width_padding
@@ -213,7 +224,7 @@ class Bunker(Base):
             length_offset=self.panel_length - self.window_length + self.panel_padding*2,
             x_translate = ((self.length-inset+(padding/2))/2)-cut_width/2,
             y_translate = ((self.width-inset+(padding/2))/2)-cut_width/2,
-            z_translate=-1*(self.panel_padding), skip_list=self.skip_windows + self.door_panels  + self.ladder_panels, keep_list=None
+            z_translate=-1*(self.panel_padding), skip_list=self.resolve_window_skip(), keep_list=None
         )
 
     def make_windows(self):
@@ -229,7 +240,7 @@ class Bunker(Base):
             length_offset=self.panel_length - self.window_length + self.panel_padding*2,
             x_translate = ((self.length-inset+(padding/2))/2)-cut_width/2,
             y_translate = ((self.width-inset+(padding/2))/2)-cut_width/2,
-            z_translate=-1*(self.panel_padding), skip_list=self.skip_windows + self.door_panels + self.ladder_panels, keep_list=None
+            z_translate=-1*(self.panel_padding), skip_list=self.resolve_window_skip(), keep_list=None
         )
 
     def make_cut_doors(self):
@@ -355,23 +366,24 @@ class Bunker(Base):
             .union(self.base)
         )
 
-        if self.render_windows:
+        if self.render_windows and self.cut_windows and self.windows:
             scene = scene.cut(self.cut_windows).union(self.windows)
 
-        if self.render_doors:
+        if self.render_doors and self.cut_doors and self.doors:
             scene = scene.cut(self.cut_doors).union(self.doors)
 
-        if self.render_ladders:
+        if self.render_ladders and self.ladders:
             scene = scene.union(self.ladders)
 
-        if self.render_roof:
+        if self.render_roof and self.roof:
             scene = scene.add(self.roof)
 
-        if self.render_floor_tiles:
+        if self.render_floor_tiles and self.interior_tiles :
             scene = scene.add(self.interior_tiles)
 
         return scene
 
     def build_plate(self):
-        self.roof = self.roof.translate((self.length,0,-1*(self.height+self.base_height)))
+        if self.roof:
+            self.roof = self.roof.translate((self.length,0,-1*(self.height+self.base_height)))
         return self.build()
