@@ -206,10 +206,10 @@ class Bunker(Base):
         skip_list = [] + self.skip_windows
 
         if self.render_doors:
-            skip_list + door_panels
+            skip_list + self.door_panels
 
         if self.render_ladders:
-            skip_list + ladder_panels
+            skip_list + self.ladder_panels
 
         return skip_list
 
