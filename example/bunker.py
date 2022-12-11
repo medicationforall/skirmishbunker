@@ -24,5 +24,6 @@ bp.render_floor_tiles=False
 bp.render_roof=False
 
 bp.make()
+rec = bp.build()
 
 cq.exporters.export(rec,'stl/bunker.stl')
