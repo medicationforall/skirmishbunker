@@ -10,8 +10,18 @@ bp.window_length = 18
 bp.window_height = 8
 bp.window_frame_chamfer = 1.6
 bp.window_frame_chamfer_select = "<Z"
-bp.render_floor_tiles=True
-bp.render_roof=True
+
+bp.render_windows=True
+bp.skip_windows = []
+
+bp.render_doors=False
+bp.door_panels = [0,3]
+
+bp.render_ladders=False
+bp.ladder_panels = [8]
+
+bp.render_floor_tiles=False
+bp.render_roof=False
 bp.make()
 rec = bp.build_plate()
 
