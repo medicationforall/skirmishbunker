@@ -249,12 +249,16 @@ class Bunker(Base):
     def make_roof(self):
         length = self.length-(2*(self.inset-self.roof_overflow))
         width = self.width-(2*(self.inset-self.roof_overflow))
+
+        print('roof length', length)
+        print ('roof width', width)
         bp = Roof()
         bp.height = self.roof_height
         bp.length = length
         bp.width = width
         bp.inset = self.roof_inset
         bp.wall_details_inset = self.roof_wall_details_inset
+        bp.render_floor_tiles = self.render_floor_tiles
         bp.make()
         self.roof=bp.build().translate((0,0, self.height/2+bp.height/2))
 
@@ -306,13 +310,17 @@ class Bunker(Base):
             .union(self.windows)
         )
 
-        if self.render_roof:
-            scene = scene.add(self.roof)
-
         if self.render_floor_tiles:
             scene = scene.add(self.interior_tiles)
 
+        if self.render_roof:
+            scene = scene.add(self.roof)
+
         return scene
+
+    def build_plate(self):
+        self.roof = self.roof.translate((self.length,0,-1*(self.height+self.base_height)))
+        return self.build()
 
 bp = Bunker()
 bp.inset=15
@@ -324,9 +332,10 @@ bp.window_height = 8
 bp.window_frame_chamfer = 1.6
 bp.window_frame_chamfer_select = "<Z"
 bp.render_floor_tiles=True
-bp.render_roof=False
+bp.render_roof=True
 bp.make()
-rec = bp.build()
+#rec = bp.build()
+rec = bp.build_plate()
 
 show_object(rec)
 
