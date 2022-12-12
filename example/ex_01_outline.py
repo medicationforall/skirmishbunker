@@ -10,7 +10,7 @@ class Bunker(Base):
         self.height = 75
 
         self.inset = 10
-        
+
         self.wedge = None
 
     def make_wedge(self):

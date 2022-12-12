@@ -378,7 +378,7 @@ class Bunker(Base):
         if self.render_roof and self.roof:
             scene = scene.add(self.roof)
 
-        if self.render_floor_tiles and self.interior_tiles :
+        if self.render_floor_tiles and self.interior_tiles:
             scene = scene.add(self.interior_tiles)
 
         return scene

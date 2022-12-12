@@ -181,6 +181,11 @@ class Bunker(Base):
 
         self.panels = self.make_series(detail_panel, length_offset=self.panel_padding*2, x_translate=x_translate, y_translate=y_translate, z_translate=-1*(self.panel_padding))
 
+    def resolve_window_skip(self):
+        skip_list = [] + self.skip_windows
+        skip_list = skip_list + self.door_panels
+        return skip_list
+
     def make_cut_windows(self):
         height = self.height
         cut_width = self.wall_width + self.inset/2 + self.window_cut_width_padding
@@ -192,7 +197,7 @@ class Bunker(Base):
             length_offset=self.panel_length - self.window_length + self.panel_padding*2,
             x_translate = ((self.length-inset+(padding/2))/2)-cut_width/2,
             y_translate = ((self.width-inset+(padding/2))/2)-cut_width/2,
-            z_translate=-1*(self.panel_padding), skip_list=self.skip_windows + self.door_panels, keep_list=None
+            z_translate=-1*(self.panel_padding), skip_list=self.resolve_window_skip(), keep_list=None
         )
 
     def make_windows(self):
@@ -208,7 +213,7 @@ class Bunker(Base):
             length_offset=self.panel_length - self.window_length + self.panel_padding*2,
             x_translate = ((self.length-inset+(padding/2))/2)-cut_width/2,
             y_translate = ((self.width-inset+(padding/2))/2)-cut_width/2,
-            z_translate=-1*(self.panel_padding), skip_list=self.skip_windows + self.door_panels, keep_list=None
+            z_translate=-1*(self.panel_padding), skip_list=self.resolve_window_skip(), keep_list=None
         )
 
     def make_cut_doors(self):
@@ -318,24 +323,20 @@ class Bunker(Base):
 
         return scene
 
-    def build_plate(self):
-        self.roof = self.roof.translate((self.length,0,-1*(self.height+self.base_height)))
-        return self.build()
-
 bp = Bunker()
 bp.inset=15
 bp.width=140
 bp.length=110
 bp.height=65
+
 bp.window_length = 18
 bp.window_height = 8
 bp.window_frame_chamfer = 1.6
 bp.window_frame_chamfer_select = "<Z"
 bp.render_floor_tiles=True
-bp.render_roof=True
+bp.render_roof=False
 bp.make()
-#rec = bp.build()
-rec = bp.build_plate()
+rec = bp.build()
 
 show_object(rec)
 

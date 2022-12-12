@@ -1213,6 +1213,28 @@ def make_doors(self):
     )
 ```
 
+### Create resolver for skipped Windows
+The thought process is that you can't have a window on the same panel where you have a door.
+``` python
+def resolve_window_skip(self):
+    skip_list = [] + self.skip_windows
+    skip_list = skip_list + self.door_panels
+    return skip_list
+```
+
+### Update make_cut_windows and make_windows to use resolve_window_skip
+#### old
+``` python
+skip_list=self.skip_windows
+```
+
+#### new
+``` python
+skip_list=self.resolve_window_skip()
+```
+
+
+
 ### Update make
 ``` python
 def make(self):
