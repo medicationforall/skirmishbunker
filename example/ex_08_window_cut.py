@@ -67,35 +67,39 @@ class Bunker(Base):
         p_length = self.panel_length
         p_width = self.panel_width
         padding = self.panel_padding
+        p_height = height - padding
 
-        cut_panel = cq.Workplane("XY").box(p_length, p_width, height - padding)
+        cut_panel = (
+            cq.Workplane("XY")
+            .box(p_length, p_width, p_height)
+            .translate((0,-1*(p_width/2),1*(p_height/2)))
+            .rotate((1,0,0),(0,0,0),self.angle-90)
+            .translate((0,0,-1*(height/2)))
+        )
         x_panels_size = math_floor(length / (p_length + (padding)))
         y_panels_size = math_floor(width / (p_length + (padding)))
 
         x_panels_plus = (
             series(cut_panel, x_panels_size, length_offset= padding*2)
-            .rotate((1,0,0),(0,0,0),(self.angle)+90)
-            .translate((0,((self.width-inset+(padding/2))/2)-p_width/2,-1*(padding)))
+            .translate((0,self.width/2,0))
         )
 
         x_panels_minus = (
             series(cut_panel, x_panels_size, length_offset= padding*2)
-            .rotate((1,0,0),(0,0,0),-1*(self.angle+90))
-            .translate((0,-1*(((self.width-inset+(padding/2))/2)-p_width/2),-1*(padding)))
+            .rotate((0,0,1),(0,0,0),180)
+            .translate((0,-1*(self.width/2),0))
         )
 
         y_panels_plus = (
             series(cut_panel, y_panels_size, length_offset= padding*2)
             .rotate((0,0,1),(0,0,0),90)
-            .rotate((0,1,0),(0,0,0),-1*(self.angle)+90)
-            .translate((((self.length-inset+(padding/2))/2)-p_width/2,0,-1*(padding)))
+            .translate((self.length/2,0,0))
         )
 
         y_panels_minus = (
             series(cut_panel, y_panels_size, length_offset= padding*2)
-            .rotate((0,0,1),(0,0,0),90)
-            .rotate((0,1,0),(0,0,0),(self.angle)+90)
-            .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
+            .rotate((0,0,1),(0,0,0),-90)
+            .translate((-1*(self.length/2),0,0))
         )
 
         self.cut_panels = x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
