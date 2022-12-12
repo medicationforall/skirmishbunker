@@ -175,7 +175,7 @@ rec = bp.build()
  ``` python
  self.int_length = None
  self.int_width = None
- 
+
  self.inset = 20
  self.interior_rectangle = None
  ```
@@ -263,8 +263,8 @@ self.cut_panels = None
 
 ``` python
 def make_cut_panels(self):
-    length = self.length-(2*(self.inset+self.wall_width))
-    width = self.width-(2*(self.inset+self.wall_width))
+    length = self.int_length
+    width = self.int_width
     height = self.height
     inset = self.inset
     p_length = self.panel_length
@@ -399,10 +399,7 @@ self.cut_panels = None
 ### Arch Details
 ``` python
 def arch_detail(self):
-    length = self.length-(2*(self.inset+self.wall_width))
-    width = self.width-(2*(self.inset+self.wall_width))
     height = self.height
-    inset = self.inset
     p_length = self.panel_length
     p_width = self.panel_width
     padding = self.panel_padding
@@ -465,50 +462,60 @@ def build(self):
 ### Build Out make_detail_panels Method
 ``` python
 def make_detail_panels(self):
-      length = self.length-(2*(self.inset+self.wall_width))
-      width = self.width-(2*(self.inset+self.wall_width))
+      length = self.int_length
+      width = self.int_width
       height = self.height
       inset = self.inset
       p_length = self.panel_length
       p_width = self.panel_width
       padding = self.panel_padding
+      p_height = height - padding
 
-      detail_panel = self.arch_detail()
+      detail_panel = (
+          self.arch_detail()
+          .translate((0,1*(p_width/2),1*(p_height/2)))
+          .rotate((0,0,1),(0,0,0),180)
+          .rotate((1,0,0),(0,0,0),self.angle-90)
+          .translate((0,0,-1*(height/2)))
+      )
 
       x_panels_size = math_floor(length / (p_length + (padding)))
       y_panels_size = math_floor(width / (p_length + (padding)))
 
       x_panels_plus = (
           series(detail_panel, x_panels_size, length_offset= padding*2)
-          .rotate((0,0,1),(0,0,0),180)
-          .rotate((1,0,0),(0,0,0),(self.angle)-90)
-          .translate((0,((self.width-inset+(padding/2))/2)-p_width/2,-1*(padding)))
+          .translate((0,self.width/2,0))
       )
 
       x_panels_minus = (
           series(detail_panel, x_panels_size, length_offset= padding*2)
-          .rotate((1,0,0),(0,0,0),-1*(self.angle-90))
-          .translate((0,-1*(((self.width-inset+(padding/2))/2)-p_width/2),-1*(padding)))
+          .rotate((0,0,1),(0,0,0),180)
+          .translate((0,-1*(self.width/2),0))
       )
 
       y_panels_plus = (
           series(detail_panel, y_panels_size, length_offset= padding*2)
-          .rotate((0,0,1),(0,0,0),-90)
-          .rotate((0,1,0),(0,0,0),-1*(self.angle)+90)
-          .translate((((self.length-inset+(padding/2))/2)-p_width/2,0,-1*(padding)))
+          .rotate((0,0,1),(0,0,0),90)
+          .translate((self.length/2,0,0))
       )
 
       y_panels_minus = (
           series(detail_panel, y_panels_size, length_offset= padding*2)
-          .rotate((0,0,1),(0,0,0),90)
-          .rotate((0,1,0),(0,0,0),(self.angle)-90)
-          .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
+          .rotate((0,0,1),(0,0,0),-90)
+          .translate((-1*(self.length/2),0,0))
       )
 
       self.panels = x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
 ```
 
 ![](image/08.png)
+
+#### Test Negative Inset
+``` python
+bp.inset=-20
+```
+
+![](image/08a.png)
 
 ---
 
@@ -1522,6 +1529,9 @@ bp.inset=15
 bp.width=140
 bp.length=110
 bp.height=65
+bp.panel_width = 6
+bp.panel_padding = 4
+
 bp.window_length = 18
 bp.window_height = 8
 bp.window_frame_chamfer = 1.6
@@ -1669,6 +1679,9 @@ bp.inset=15
 bp.width=140
 bp.length=110
 bp.height=65
+bp.panel_width = 6
+bp.panel_padding = 4
+
 bp.window_length = 18
 bp.window_height = 8
 bp.window_frame_chamfer = 1.6

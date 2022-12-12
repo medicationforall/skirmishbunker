@@ -149,10 +149,7 @@ class Bunker(Base):
         self.cut_panels = self.make_series(cut_panel, length_offset=self.panel_padding*2, x_translate=x_translate,y_translate=y_translate, z_translate=-1*(self.panel_padding))
 
     def arch_detail(self):
-        length = self.length-(2*(self.inset+self.wall_width))
-        width = self.width-(2*(self.inset+self.wall_width))
         height = self.height
-        inset = self.inset
         p_length = self.panel_length
         p_width = self.panel_width
         padding = self.panel_padding
@@ -259,6 +256,8 @@ bp.inset=20
 bp.width=150
 bp.length=120
 bp.height=72
+bp.panel_width = 6
+bp.panel_padding = 4
 bp.window_length = 18
 bp.window_height = 8
 bp.window_frame_chamfer = 1.6

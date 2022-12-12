@@ -137,6 +137,8 @@ bp = Bunker()
 bp.inset=20
 bp.width=150
 bp.length=120
+bp.panel_width = 6
+bp.panel_padding = 4
 bp.make()
 rec = bp.build()
 

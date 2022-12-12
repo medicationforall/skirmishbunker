@@ -100,10 +100,7 @@ class Bunker(Base):
         self.cut_panels = x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
 
     def arch_detail(self):
-        length = self.length-(2*(self.inset+self.wall_width))
-        width = self.width-(2*(self.inset+self.wall_width))
         height = self.height
-        inset = self.inset
         p_length = self.panel_length
         p_width = self.panel_width
         padding = self.panel_padding
@@ -119,44 +116,47 @@ class Bunker(Base):
         return panel
 
     def make_detail_panels(self):
-        length = self.length-(2*(self.inset+self.wall_width))
-        width = self.width-(2*(self.inset+self.wall_width))
+        length = self.int_length
+        width = self.int_width
         height = self.height
         inset = self.inset
         p_length = self.panel_length
         p_width = self.panel_width
         padding = self.panel_padding
+        p_height = height - padding
 
-        detail_panel = self.arch_detail()
+        detail_panel = (
+            self.arch_detail()
+            .translate((0,1*(p_width/2),1*(p_height/2)))
+            .rotate((0,0,1),(0,0,0),180)
+            .rotate((1,0,0),(0,0,0),self.angle-90)
+            .translate((0,0,-1*(height/2)))
+        )
 
         x_panels_size = math_floor(length / (p_length + (padding)))
         y_panels_size = math_floor(width / (p_length + (padding)))
 
         x_panels_plus = (
             series(detail_panel, x_panels_size, length_offset= padding*2)
-            .rotate((0,0,1),(0,0,0),180)
-            .rotate((1,0,0),(0,0,0),(self.angle)-90)
-            .translate((0,((self.width-inset+(padding/2))/2)-p_width/2,-1*(padding)))
+            .translate((0,self.width/2,0))
         )
 
         x_panels_minus = (
             series(detail_panel, x_panels_size, length_offset= padding*2)
-            .rotate((1,0,0),(0,0,0),-1*(self.angle-90))
-            .translate((0,-1*(((self.width-inset+(padding/2))/2)-p_width/2),-1*(padding)))
+            .rotate((0,0,1),(0,0,0),180)
+            .translate((0,-1*(self.width/2),0))
         )
 
         y_panels_plus = (
             series(detail_panel, y_panels_size, length_offset= padding*2)
-            .rotate((0,0,1),(0,0,0),-90)
-            .rotate((0,1,0),(0,0,0),-1*(self.angle)+90)
-            .translate((((self.length-inset+(padding/2))/2)-p_width/2,0,-1*(padding)))
+            .rotate((0,0,1),(0,0,0),90)
+            .translate((self.length/2,0,0))
         )
 
         y_panels_minus = (
             series(detail_panel, y_panels_size, length_offset= padding*2)
-            .rotate((0,0,1),(0,0,0),90)
-            .rotate((0,1,0),(0,0,0),(self.angle)-90)
-            .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
+            .rotate((0,0,1),(0,0,0),-90)
+            .translate((-1*(self.length/2),0,0))
         )
 
         self.panels = x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
@@ -185,8 +185,8 @@ class Bunker(Base):
             .union(self.wedge)
             .cut(self.interior_rectangle)
             .cut(self.cut_panels)
-            .union(self.panels)
             .union(self.base)
+            .add(self.panels)
         )
         return scene
 
@@ -194,6 +194,8 @@ bp = Bunker()
 bp.inset=20
 bp.width=150
 bp.length=120
+bp.panel_width = 6
+bp.panel_padding = 4
 bp.make()
 rec = bp.build()
 

@@ -112,8 +112,8 @@ class Bunker(Base):
         )
 
     def make_series(self, shape, length_offset, x_translate=0, y_translate=0, z_translate=0, skip_list=None, keep_list=None):
-        length = self.length-(2*(self.inset+self.wall_width))
-        width = self.width-(2*(self.inset+self.wall_width))
+        length = self.int_length
+        width = self.int_width
         padding = self.panel_padding
         inset = self.inset
         p_width = self.panel_width
@@ -182,10 +182,7 @@ class Bunker(Base):
         self.cut_panels = self.make_series(cut_panel, length_offset=self.panel_padding*2, x_translate=x_translate,y_translate=y_translate, z_translate=-1*(self.panel_padding))
 
     def arch_detail(self):
-        length = self.length-(2*(self.inset+self.wall_width))
-        width = self.width-(2*(self.inset+self.wall_width))
         height = self.height
-        inset = self.inset
         p_length = self.panel_length
         p_width = self.panel_width
         padding = self.panel_padding
@@ -325,12 +322,11 @@ class Bunker(Base):
     def make_interior_floor(self):
         tile_size = 11
         tile_padding = 1
-        int_length = self.length-(2*(self.inset+self.wall_width))-20
-        int_width = self.width-(2*(self.inset+self.wall_width))-20
+        int_length = self.int_length-20
+        int_width = self.int_width-20
 
         floor_tile = tile.octagon_with_dots(tile_size, 2.4, 3.2, 1)
 
-        #t_height = bounds.zlen
         columns = math_floor(int_width/(tile_size + tile_padding))
         rows = math_floor(int_length/(tile_size + tile_padding))
         tile_grid = grid.make_grid(part=floor_tile, dim = [tile_size + tile_padding, tile_size + tile_padding], columns = columns, rows = rows)
