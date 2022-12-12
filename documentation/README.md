@@ -173,6 +173,9 @@ rec = bp.build()
 ### New \_\_init__ Parameter
 
  ``` python
+ self.int_length = None
+ self.int_width = None
+ 
  self.inset = 20
  self.interior_rectangle = None
  ```
@@ -181,9 +184,16 @@ rec = bp.build()
 
 ``` python
 def make_interior_rectangle(self):
+    self.int_length = self.length - (2*(self.inset+self.wall_width))
+    self.int_width = self.width - (2*(self.inset+self.wall_width))
+
+    if self.inset < 0:
+        self.int_length = self.length - (2*(self.wall_width))
+        self.int_width = self.width - (2*(self.wall_width))
+
     self.interior_rectangle = (
         cq.Workplane("XY")
-        .box(self.length-(2*(self.inset+self.wall_width)), self.width-(2*(self.inset+self.wall_width)), self.height-self.wall_width)
+        .box(self.int_length, self.int_width, self.height-self.wall_width)
         .translate((0,0,self.wall_width/2))
     )
 ```
@@ -250,47 +260,52 @@ self.cut_panels = None
 ```
 
 ### Generate Cut Panels
+
 ``` python
 def make_cut_panels(self):
-      length = self.length-(2*(self.inset+self.wall_width))
-      width = self.width-(2*(self.inset+self.wall_width))
-      height = self.height
-      inset = self.inset
-      p_length = self.panel_length
-      p_width = self.panel_width
-      padding = self.panel_padding
+    length = self.length-(2*(self.inset+self.wall_width))
+    width = self.width-(2*(self.inset+self.wall_width))
+    height = self.height
+    inset = self.inset
+    p_length = self.panel_length
+    p_width = self.panel_width
+    padding = self.panel_padding
+    p_height = height - padding
 
-      cut_panel = cq.Workplane("XY").box(p_length, p_width, height - padding)
-      x_panels_size = math_floor(length / (p_length + (padding)))
-      y_panels_size = math_floor(width / (p_length + (padding)))
+    cut_panel = (
+        cq.Workplane("XY")
+        .box(p_length, p_width, p_height)
+        .translate((0,-1*(p_width/2),1*(p_height/2)))
+        .rotate((1,0,0),(0,0,0),self.angle-90)
+        .translate((0,0,-1*(height/2)))
+    )
+    x_panels_size = math_floor(length / (p_length + (padding)))
+    y_panels_size = math_floor(width / (p_length + (padding)))
 
-      x_panels_plus = (
-          series(cut_panel, x_panels_size, length_offset= padding*2)
-          .rotate((1,0,0),(0,0,0),(self.angle)+90)
-          .translate((0,((self.width-inset+(padding/2))/2)-p_width/2,-1*(padding)))
-      )
+    x_panels_plus = (
+        series(cut_panel, x_panels_size, length_offset= padding*2)
+        .translate((0,self.width/2,0))
+    )
 
-      x_panels_minus = (
-          series(cut_panel, x_panels_size, length_offset= padding*2)
-          .rotate((1,0,0),(0,0,0),-1*(self.angle+90))
-          .translate((0,-1*(((self.width-inset+(padding/2))/2)-p_width/2),-1*(padding)))
-      )
+    x_panels_minus = (
+        series(cut_panel, x_panels_size, length_offset= padding*2)
+        .rotate((0,0,1),(0,0,0),180)
+        .translate((0,-1*(self.width/2),0))
+    )
 
-      y_panels_plus = (
-          series(cut_panel, y_panels_size, length_offset= padding*2)
-          .rotate((0,0,1),(0,0,0),90)
-          .rotate((0,1,0),(0,0,0),-1*(self.angle)+90)
-          .translate((((self.length-inset+(padding/2))/2)-p_width/2,0,-1*(padding)))
-      )
+    y_panels_plus = (
+        series(cut_panel, y_panels_size, length_offset= padding*2)
+        .rotate((0,0,1),(0,0,0),90)
+        .translate((self.length/2,0,0))
+    )
 
-      y_panels_minus = (
-          series(cut_panel, y_panels_size, length_offset= padding*2)
-          .rotate((0,0,1),(0,0,0),90)
-          .rotate((0,1,0),(0,0,0),(self.angle)+90)
-          .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
-      )
+    y_panels_minus = (
+        series(cut_panel, y_panels_size, length_offset= padding*2)
+        .rotate((0,0,1),(0,0,0),-90)
+        .translate((-1*(self.length/2),0,0))
+    )
 
-      self.cut_panels = x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
+    self.cut_panels = x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
 ```
 
 ### Update make
@@ -323,11 +338,45 @@ bp = Bunker()
 bp.inset=20
 bp.width=150
 bp.length=120
+bp.panel_width = 6
+bp.panel_padding = 4
 bp.make()
 rec = bp.build()
 ```
 
 ![](image/06.png)
+
+This code was a pain to get right. <br />Below is further inset testing.
+
+#### Inset 0
+``` python
+bp.inset=0
+bp.panel_width = 4
+```
+
+![](image/06c.png)
+
+#### Inset 10
+
+``` python
+bp.inset=10
+bp.panel_width = 5
+```
+
+![](image/06d.png)
+
+#### Inset 20
+``` python
+bp.inset=20
+```
+![](image/06.png)
+
+#### Inset 30
+``` python
+bp.inset=30
+```
+![](image/06b.png)
+
 
 ---
 

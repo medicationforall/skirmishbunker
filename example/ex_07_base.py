@@ -10,6 +10,8 @@ class Bunker(Base):
         self.length = 100
         self.width = 100
         self.height = 75
+        self.int_length = None
+        self.int_width = None
 
         self.angle = 0
         self.inset = 10
@@ -39,9 +41,16 @@ class Bunker(Base):
         )
 
     def make_interior_rectangle(self):
+        self.int_length = self.length - (2*(self.inset+self.wall_width))
+        self.int_width = self.width - (2*(self.inset+self.wall_width))
+
+        if self.inset < 0:
+            self.int_length = self.length - (2*(self.wall_width))
+            self.int_width = self.width - (2*(self.wall_width))
+
         self.interior_rectangle = (
             cq.Workplane("XY")
-            .box(self.length-(2*(self.inset+self.wall_width)), self.width-(2*(self.inset+self.wall_width)), self.height-self.wall_width)
+            .box(self.int_length, self.int_width, self.height-self.wall_width)
             .translate((0,0,self.wall_width/2))
         )
 
@@ -154,7 +163,7 @@ class Bunker(Base):
             .box(self.length, self.width, self.base_height)
             .translate((0,0,-1*((self.height/2)+(self.base_height/2))))
         )
-        
+
     def make(self):
         super().make()
         self.angle =roof.angle(self.inset, self.height)
