@@ -13,6 +13,11 @@ https://www.pinterest.com/pin/bunker-part-2--483855553698959743/
 
 ![](./image/cover.png)
 
+### Demonstration Video Link
+[![](./image/motion_thumbnail.png)](https://www.youtube.com/watch?v=UXTRrt9OsbQ)
+
+[https://www.youtube.com/watch?v=UXTRrt9OsbQ](https://www.youtube.com/watch?v=UXTRrt9OsbQ)
+
 ---
 ## All Your Base
 [src code](../src/skirmishbunker/Base.py)
