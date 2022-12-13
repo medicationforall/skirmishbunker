@@ -55,8 +55,8 @@ class Bunker(Base):
         )
 
     def make_cut_panels(self):
-        length = self.length-(2*(self.inset+self.wall_width))
-        width = self.width-(2*(self.inset+self.wall_width))
+        length = self.int_length
+        width = self.int_width
         height = self.height
         inset = self.inset
         p_length = self.panel_length

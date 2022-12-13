@@ -168,18 +168,23 @@ class Bunker(Base):
         return scene
 
     def make_cut_panels(self):
-        cut_panel = cq.Workplane("XY").box(
-            self.panel_length,
-            self.panel_width, self.height - self.panel_padding
-        )
-        cut_panel = (
-            cq.Workplane("XY").box(self.panel_length,self.panel_width, self.height - self.panel_padding)
-            .rotate((1,0,0),(0,0,0),(self.angle)+90)
-            )
+        height = self.height
+        p_length = self.panel_length
+        p_width = self.panel_width
+        padding = self.panel_padding
+        p_height = height - padding
 
-        x_translate = ((self.length-self.inset+(self.panel_padding/2))/2)-self.panel_width/2
-        y_translate = ((self.width-self.inset+(self.panel_padding/2))/2)-self.panel_width/2
-        self.cut_panels = self.make_series(cut_panel, length_offset=self.panel_padding*2, x_translate=x_translate,y_translate=y_translate, z_translate=-1*(self.panel_padding))
+        cut_panel = (
+        cq.Workplane("XY")
+            .box(p_length, p_width, p_height)
+            .translate((0,-1*(p_width/2),1*(p_height/2)))
+            .rotate((1,0,0),(0,0,0),self.angle-90)
+            .translate((0,0,-1*(height/2)))
+        )
+
+        x_translate = self.length/2
+        y_translate = self.width/2
+        self.cut_panels = self.make_series(cut_panel, length_offset=self.panel_padding*2, x_translate=x_translate,y_translate=y_translate, z_translate=0)
 
     def arch_detail(self):
         height = self.height
@@ -198,15 +203,23 @@ class Bunker(Base):
         return panel
 
     def make_detail_panels(self):
+        height = self.height
+        p_length = self.panel_length
+        p_width = self.panel_width
+        padding = self.panel_padding
+        p_height = height - padding
+
         detail_panel = (
             self.arch_detail()
-            .rotate((0,1,0),(0,0,0),180)
-            .rotate((1,0,0),(0,0,0),(self.angle)+90)
+            .translate((0,1*(p_width/2),1*(p_height/2)))
+            .rotate((0,0,1),(0,0,0),180)
+            .rotate((1,0,0),(0,0,0),self.angle-90)
+            .translate((0,0,-1*(height/2)))
         )
-        x_translate = ((self.length-self.inset+(self.panel_padding/2))/2)-self.panel_width/2
-        y_translate = ((self.width-self.inset+(self.panel_padding/2))/2)-self.panel_width/2
 
-        self.panels = self.make_series(detail_panel, length_offset=self.panel_padding*2, x_translate=x_translate, y_translate=y_translate, z_translate=-1*(self.panel_padding))
+        x_translate = self.length/2
+        y_translate = self.width/2
+        self.panels = self.make_series(detail_panel, length_offset=self.panel_padding*2, x_translate=x_translate,y_translate=y_translate, z_translate=0)
 
     def resolve_window_skip(self):
         skip_list = [] + self.skip_windows
@@ -222,6 +235,8 @@ class Bunker(Base):
     def make_cut_windows(self):
         height = self.height
         cut_width = self.wall_width + self.inset/2 + self.window_cut_width_padding
+        if self.inset < 0:
+            cut_width = self.wall_width - self.inset/2 + self.window_cut_width_padding
         cut_window = (cq.Workplane("XY").box(self.window_length, cut_width,self.window_height))
         inset = self.inset
         padding = self.panel_padding
@@ -236,6 +251,8 @@ class Bunker(Base):
     def make_windows(self):
         height = self.height
         cut_width = self.wall_width + self.inset/2 + self.window_cut_width_padding
+        if self.inset < 0:
+            cut_width = self.wall_width - self.inset/2 + self.window_cut_width_padding
         frame = window.frame(self.window_length, cut_width, self.window_height, self.window_frame_width)
         frame = frame.faces("Y").edges(self.window_frame_chamfer_select).chamfer(self.window_frame_chamfer)
 
@@ -259,6 +276,9 @@ class Bunker(Base):
         )
 
         cut_width = self.wall_width + self.inset/2 + self.window_cut_width_padding
+        if self.inset < 0:
+            cut_width = self.wall_width - self.inset/2 + self.window_cut_width_padding
+
         self.cut_doors = self.make_series(
             cut_door,
             length_offset=self.panel_length - self.door_length + self.panel_padding*2,
@@ -275,12 +295,17 @@ class Bunker(Base):
         bp.make()
         door = bp.build().translate((0,0,-1*(height/2 - self.door_height/2)+self.wall_width))
 
-        cut_width = self.wall_width + self.inset/2 + self.window_cut_width_padding
+        x_translate = self.int_length/2+bp.width
+        y_translate = self.int_width/2+bp.width
+        if self.inset < 0:
+            x_translate = self.int_length/2+(bp.width/4)
+            y_translate = self.int_width/2+(bp.width/4)
+
         self.doors = self.make_series(
             door,
             length_offset=self.panel_length - self.door_length + self.panel_padding*2,
-            x_translate = ((self.length-self.inset+(self.panel_padding/2))/2)-cut_width/2,
-            y_translate = ((self.width-self.inset+(self.panel_padding/2))/2)-cut_width/2,
+            x_translate = x_translate,
+            y_translate = y_translate,
             z_translate=0, skip_list=None, keep_list=self.door_panels
         )
 
@@ -367,7 +392,6 @@ class Bunker(Base):
             .union(self.wedge)
             .cut(self.interior_rectangle)
             .cut(self.cut_panels)
-            .union(self.panels)
             .union(self.base)
         )
 
@@ -386,9 +410,17 @@ class Bunker(Base):
         if self.render_floor_tiles and self.interior_tiles:
             scene = scene.add(self.interior_tiles)
 
+        scene = scene.add(self.panels)
+
         return scene
 
     def build_plate(self):
-        if self.roof:
-            self.roof = self.roof.translate((self.length,0,-1*(self.height+self.base_height)))
+        x_translate = self.length
+
+        if self.inset < 0:
+            x_translate = self.length+(-1*(self.inset*2))
+        if self.inset == 0:
+            x_translate = self.length+15
+
+        self.roof = self.roof.translate((x_translate,0,-1*(self.height+self.base_height)))
         return self.build()

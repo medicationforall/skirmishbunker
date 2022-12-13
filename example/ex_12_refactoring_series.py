@@ -55,8 +55,8 @@ class Bunker(Base):
         return cut_panel
 
     def make_series(self, shape, skip_list=None, keep_list=None):
-        length = self.length-(2*(self.inset+self.wall_width))
-        width = self.width-(2*(self.inset+self.wall_width))
+        length = self.int_length
+        width = self.int_width
         padding = self.panel_padding
         inset = self.inset
         p_width = self.panel_width
@@ -66,26 +66,26 @@ class Bunker(Base):
 
         x_plus = (
             series(shape, x_panels_size, length_offset= padding*2)
-            .translate((0,((self.width-inset+(padding/2))/2)-p_width/2,-1*(padding)))
+            .translate((0,self.width/2,0))
         )
 
         x_minus = (
             series(shape, x_panels_size, length_offset= padding*2)
             .rotate((0,0,1),(0,0,0),180)
-            .translate((0,-1*(((self.width-inset+(padding/2))/2)-p_width/2),-1*(padding)))
+            .translate((0,-1*(self.width/2),0))
         )
 
         y_plus = (
             series(shape, y_panels_size, length_offset= padding*2)
             .rotate((0,0,1),(0,0,0),90)
-            .translate((((self.length-inset+(padding/2))/2)-p_width/2,0,-1*(padding)))
+            .translate((self.length/2,0,0))
         )
 
         y_minus = (
             series(shape, y_panels_size, length_offset= padding*2)
             .rotate((0,0,1),(0,0,0),90)
             .rotate((0,0,1),(0,0,0),180)
-            .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
+            .translate((-1*(self.length/2),0,0))
         )
 
         scene = x_plus.add(y_plus).add(x_minus).add(y_minus)
@@ -109,10 +109,19 @@ class Bunker(Base):
         return scene
 
     def make_cut_panels(self):
+        height = self.height
+        p_length = self.panel_length
+        p_width = self.panel_width
+        padding = self.panel_padding
+        p_height = height - padding
+
         cut_panel = (
-            self.make_cut_panel()
-            .rotate((1,0,0),(0,0,0),(self.angle)+90)
-            )
+            cq.Workplane("XY")
+            .box(p_length, p_width, p_height)
+            .translate((0,-1*(p_width/2),1*(p_height/2)))
+            .rotate((1,0,0),(0,0,0),self.angle-90)
+            .translate((0,0,-1*(height/2)))
+        )
         self.cut_panels = self.make_series(cut_panel, [0], [0,2, 4, 5, 6, 7, 8])
 
     def make(self):

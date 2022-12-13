@@ -60,8 +60,8 @@ class Bunker(Base):
         )
 
     def make_cut_panels(self):
-        length = self.length-(2*(self.inset+self.wall_width))
-        width = self.width-(2*(self.inset+self.wall_width))
+        length = self.int_length
+        width = self.int_width
         height = self.height
         inset = self.inset
         p_length = self.panel_length
@@ -174,14 +174,18 @@ class Bunker(Base):
         )
 
     def make_cut_windows(self):
-        length = self.length-(2*(self.inset+self.wall_width))
-        width = self.width-(2*(self.inset+self.wall_width))
+        length = self.int_length
+        width = self.int_width
         height = self.height
         inset = self.inset
+
         p_length = self.panel_length
         p_width = self.panel_width
         padding = self.panel_padding
+
         cut_width = self.wall_width + inset/2 + self.window_cut_width_padding
+        if inset < 0:
+            cut_width = self.wall_width - inset/2 + self.window_cut_width_padding
         length_offset = p_length - self.window_length + padding*2
 
         cut_window = cq.Workplane("XY").box(self.window_length, cut_width,self.window_height)
@@ -231,7 +235,7 @@ class Bunker(Base):
             .cut(self.interior_rectangle)
             .cut(self.cut_panels)
             .union(self.base)
-            .cut(self.cut_windows)
+            .add(self.cut_windows)
             .add(self.panels)
         )
         return scene

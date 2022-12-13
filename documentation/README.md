@@ -1000,10 +1000,19 @@ Run the example in a different cqeditor instance.<br />
 ### Minimal make method
 ``` python
 def make_cut_panels(self):
+    height = self.height
+    p_length = self.panel_length
+    p_width = self.panel_width
+    padding = self.panel_padding
+    p_height = height - padding
+
     cut_panel = (
-        self.make_cut_panel()
-        .rotate((1,0,0),(0,0,0),(self.angle)+90)
-        )
+        cq.Workplane("XY")
+        .box(p_length, p_width, p_height)
+        .translate((0,-1*(p_width/2),1*(p_height/2)))
+        .rotate((1,0,0),(0,0,0),self.angle-90)
+        .translate((0,0,-1*(height/2)))
+    )
     self.cut_panels = self.make_series(cut_panel, [0], [0,2, 4, 5, 6, 7, 8])
 ```
 
@@ -1025,57 +1034,58 @@ def make_cut_panel(self):
 
 ``` python
 def make_series(self, shape, skip_list=None, keep_list=None):
-        length = self.length-(2*(self.inset+self.wall_width))
-        width = self.width-(2*(self.inset+self.wall_width))
-        padding = self.panel_padding
-        inset = self.inset
-        p_width = self.panel_width
+      length = self.int_length
+      width = self.int_width
+      padding = self.panel_padding
+      inset = self.inset
+      p_width = self.panel_width
 
-        x_panels_size = math_floor(length / (self.panel_length + self.panel_padding))
-        y_panels_size = math_floor(width / (self.panel_length + self.panel_padding))
+      x_panels_size = math_floor(length / (self.panel_length + self.panel_padding))
+      y_panels_size = math_floor(width / (self.panel_length + self.panel_padding))
 
-        x_plus = (
-            series(shape, x_panels_size, length_offset= padding*2)
-            .translate((0,((self.width-inset+(padding/2))/2)-p_width/2,-1*(padding)))
-        )
+      x_plus = (
+          series(shape, x_panels_size, length_offset= padding*2)
+          .translate((0,self.width/2,0))
+      )
 
-        x_minus = (
-            series(shape, x_panels_size, length_offset= padding*2)
-            .rotate((0,0,1),(0,0,0),180)
-            .translate((0,-1*(((self.width-inset+(padding/2))/2)-p_width/2),-1*(padding)))
-        )
+      x_minus = (
+          series(shape, x_panels_size, length_offset= padding*2)
+          .rotate((0,0,1),(0,0,0),180)
+          .translate((0,-1*(self.width/2),0))
+      )
 
-        y_plus = (
-            series(shape, y_panels_size, length_offset= padding*2)
-            .rotate((0,0,1),(0,0,0),90)
-            .translate((((self.length-inset+(padding/2))/2)-p_width/2,0,-1*(padding)))
-        )
+      y_plus = (
+          series(shape, y_panels_size, length_offset= padding*2)
+          .rotate((0,0,1),(0,0,0),90)
+          .translate((self.length/2,0,0))
+      )
 
-        y_minus = (
-            series(shape, y_panels_size, length_offset= padding*2)
-            .rotate((0,0,1),(0,0,0),90)
-            .rotate((0,0,1),(0,0,0),180)
-            .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
-        )
+      y_minus = (
+          series(shape, y_panels_size, length_offset= padding*2)
+          .rotate((0,0,1),(0,0,0),90)
+          .rotate((0,0,1),(0,0,0),180)
+          .translate((-1*(self.length/2),0,0))
+      )
 
-        scene = x_plus.add(y_plus).add(x_minus).add(y_minus)
+      scene = x_plus.add(y_plus).add(x_minus).add(y_minus)
 
-        if skip_list and len(skip_list) > 0:
-            solids = scene.solids().vals()
-            scene = cq.Workplane("XY")
 
-            for  index, solid in enumerate(solids):
-                if index not in skip_list:
-                    scene.add(solid)            
-        elif keep_list and len(keep_list) > 0:
-            solids = scene.solids().vals()
-            scene = cq.Workplane("XY")
+      if skip_list and len(skip_list) > 0:
+          solids = scene.solids().vals()
+          scene = cq.Workplane("XY")
 
-            for  index, solid in enumerate(solids):
-                if index in keep_list:
-                    scene.add(solid)
+          for  index, solid in enumerate(solids):
+              if index not in skip_list:
+                  scene.add(solid)
+      elif keep_list and len(keep_list) > 0:
+          solids = scene.solids().vals()
+          scene = cq.Workplane("XY")
 
-        return scene
+          for  index, solid in enumerate(solids):
+              if index in keep_list:
+                  scene.add(solid)
+
+      return scene
 ```
 
 This code doesn't seem any shorter but...
@@ -1095,62 +1105,72 @@ Refer to the example to see the full list of changes.<br />
 ### Old make_detail_panels
 ``` python
 def make_detail_panels(self):
-      length = self.length-(2*(self.inset+self.wall_width))
-      width = self.width-(2*(self.inset+self.wall_width))
+      length = self.int_length
+      width = self.int_width
       height = self.height
       inset = self.inset
       p_length = self.panel_length
       p_width = self.panel_width
       padding = self.panel_padding
+      p_height = height - padding
 
-      detail_panel = self.arch_detail()
+      detail_panel = (
+          self.arch_detail()
+          .translate((0,1*(p_width/2),1*(p_height/2)))
+          .rotate((0,0,1),(0,0,0),180)
+          .rotate((1,0,0),(0,0,0),self.angle-90)
+          .translate((0,0,-1*(height/2)))
+      )
 
       x_panels_size = math_floor(length / (p_length + (padding)))
       y_panels_size = math_floor(width / (p_length + (padding)))
 
       x_panels_plus = (
           series(detail_panel, x_panels_size, length_offset= padding*2)
-          .rotate((0,0,1),(0,0,0),180)
-          .rotate((1,0,0),(0,0,0),(self.angle)-90)
-          .translate((0,((self.width-inset+(padding/2))/2)-p_width/2,-1*(padding)))
+          .translate((0,self.width/2,0))
       )
 
       x_panels_minus = (
           series(detail_panel, x_panels_size, length_offset= padding*2)
-          .rotate((1,0,0),(0,0,0),-1*(self.angle-90))
-          .translate((0,-1*(((self.width-inset+(padding/2))/2)-p_width/2),-1*(padding)))
+          .rotate((0,0,1),(0,0,0),180)
+          .translate((0,-1*(self.width/2),0))
       )
 
       y_panels_plus = (
           series(detail_panel, y_panels_size, length_offset= padding*2)
-          .rotate((0,0,1),(0,0,0),-90)
-          .rotate((0,1,0),(0,0,0),-1*(self.angle)+90)
-          .translate((((self.length-inset+(padding/2))/2)-p_width/2,0,-1*(padding)))
+          .rotate((0,0,1),(0,0,0),90)
+          .translate((self.length/2,0,0))
       )
 
       y_panels_minus = (
           series(detail_panel, y_panels_size, length_offset= padding*2)
-          .rotate((0,0,1),(0,0,0),90)
-          .rotate((0,1,0),(0,0,0),(self.angle)-90)
-          .translate((-1*(((self.length-inset+(padding/2))/2)-p_width/2),0,-1*(padding)))
+          .rotate((0,0,1),(0,0,0),-90)
+          .translate((-1*(self.length/2),0,0))
       )
 
       self.panels = x_panels_plus.add(y_panels_plus).add(x_panels_minus).add(y_panels_minus)
-
 ```
 
 ### New make_detail_panels
 ``` python
 def make_detail_panels(self):
+    height = self.height
+    p_length = self.panel_length
+    p_width = self.panel_width
+    padding = self.panel_padding
+    p_height = height - padding
+
     detail_panel = (
         self.arch_detail()
-        .rotate((0,1,0),(0,0,0),180)
-        .rotate((1,0,0),(0,0,0),(self.angle)+90)
+        .translate((0,1*(p_width/2),1*(p_height/2)))
+        .rotate((0,0,1),(0,0,0),180)
+        .rotate((1,0,0),(0,0,0),self.angle-90)
+        .translate((0,0,-1*(height/2)))
     )
-    x_translate = ((self.length-self.inset+(self.panel_padding/2))/2)-self.panel_width/2
-    y_translate = ((self.width-self.inset+(self.panel_padding/2))/2)-self.panel_width/2
 
-    self.panels = self.make_series(detail_panel, length_offset=self.panel_padding*2, x_translate=x_translate, y_translate=y_translate, z_translate=-1*(self.panel_padding))
+    x_translate = self.length/2
+    y_translate = self.width/2
+    self.panels = self.make_series(detail_panel, length_offset=self.panel_padding*2, x_translate=x_translate,y_translate=y_translate, z_translate=0)
 ```
 
 ---
@@ -1259,12 +1279,17 @@ def make_doors(self):
     bp.make()
     door = bp.build().translate((0,0,-1*(height/2 - self.door_height/2)+self.wall_width))
 
-    cut_width = self.wall_width + self.inset/2 + self.window_cut_width_padding
+    x_translate = self.int_length/2+bp.width
+    y_translate = self.int_width/2+bp.width
+    if self.inset < 0:
+        x_translate = self.int_length/2+(bp.width/4)
+        y_translate = self.int_width/2+(bp.width/4)
+
     self.doors = self.make_series(
         door,
         length_offset=self.panel_length - self.door_length + self.panel_padding*2,
-        x_translate = ((self.length-self.inset+(self.panel_padding/2))/2)-cut_width/2,
-        y_translate = ((self.width-self.inset+(self.panel_padding/2))/2)-cut_width/2,
+        x_translate = x_translate,
+        y_translate = y_translate,
         z_translate=0, skip_list=None, keep_list=self.door_panels
     )
 ```
@@ -1849,7 +1874,14 @@ def make_roof(self):
 ### Add build_plate methods
 ``` python
 def build_plate(self):
-    self.roof = self.roof.translate((self.length,0,-1*(self.height+self.base_height)))
+    x_translate = self.length
+
+    if self.inset < 0:
+        x_translate = self.length+(-1*(self.inset*2))
+    if self.inset == 0:
+        x_translate = self.length+15
+
+    self.roof = self.roof.translate((x_translate,0,-1*(self.height+self.base_height)))
     return self.build()
 ```
 
