@@ -30,7 +30,7 @@ class Bunker(Base):
         self.window_width_offset = -2
         self.window_length = 15
         self.window_height = 20
-        self.skip_windows = [0, 2, 4]
+        self.skip_windows = []
 
         self.wedge = None
         self.interior_rectangle = None

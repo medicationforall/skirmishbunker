@@ -10,8 +10,8 @@ class Bunker(Base):
         self.width = 100
         self.height = 75
 
-        self.inset = 10
         self.angle = 0
+        self.inset = 10
 
         self.wedge = None
 
