@@ -1,7 +1,7 @@
 import cadquery as cq
-from cadqueryhelper import shape, series, grid
-from cqterrain import window, roof, tile, Ladder
-from skirmishbunker import Base, BlastDoor, Roof
+from cadqueryhelper import shape, series
+from cqterrain import roof, window
+from skirmishbunker import Base
 from math import floor as math_floor
 
 class Bunker(Base):
@@ -16,8 +16,6 @@ class Bunker(Base):
         self.angle = 0
         self.inset = 10
         self.wall_width = 5
-
-        self.render_panel_details=True
         self.panel_length = 28
         self.panel_width = 6
         self.panel_padding = 4
@@ -29,45 +27,22 @@ class Bunker(Base):
         self.inner_arch_sides = 4
         self.base_height = 3
 
-        self.render_windows=True
         self.window_width_offset = -2
         self.window_length = 15
         self.window_height = 20
-        self.window_length_padding = 0
 
         self.window_frame_width = 2
         self.window_frame_chamfer = 1.6
         self.window_frame_chamfer_select = "<Z or >Z"
-        self.skip_windows = [0]
-
-        self.render_doors=True
-        self.door_panels = [0,3]
-        self.ladder_panels = [8]
-        self.door_length = 23
-        self.door_height =35
-        self.door_fillet = 4
-
-        self.render_roof=True
-        self.roof_height = 18
-        self.roof_inset = -3
-        self.roof_overflow = 1
-        self.roof_wall_details_inset = -0.8
-
-        self.render_floor_tiles=True
-        self.render_ladders=True
+        self.skip_windows = [0, 2, 4]
 
         self.wedge = None
         self.interior_rectangle = None
         self.panels = None
         self.cut_panels = None
         self.cut_windows = None
-        self.cut_doors = None
         self.windows = None
-        self.doors = None
         self.base = None
-        self.roof = None
-        self.interior_tiles = None
-        self.ladders = None
 
     def make_wedge(self):
         self.wedge = (
@@ -207,17 +182,6 @@ class Bunker(Base):
         y_translate = self.width/2
         self.panels = self.make_series(detail_panel, length_offset=self.panel_padding*2, x_translate=x_translate,y_translate=y_translate, z_translate=0)
 
-    def resolve_window_skip(self):
-        skip_list = [] + self.skip_windows
-
-        if self.render_doors:
-            skip_list = skip_list + self.door_panels
-
-        if self.render_ladders:
-            skip_list = skip_list + self.ladder_panels
-
-        return skip_list
-
     def make_cut_windows(self):
         height = self.height
         cut_width = self.inset+self.wall_width
@@ -232,7 +196,7 @@ class Bunker(Base):
             length_offset=self.panel_length - self.window_length + self.panel_padding*2,
             x_translate = self.int_length/2+cut_width/2,
             y_translate = self.int_width/2+cut_width/2,
-            z_translate=-1*(self.panel_padding), skip_list=self.resolve_window_skip(), keep_list=None
+            z_translate=-1*(self.panel_padding), skip_list=self.skip_windows, keep_list=None
         )
 
     def make_windows(self):
@@ -253,99 +217,8 @@ class Bunker(Base):
             length_offset=self.panel_length - self.window_length + self.panel_padding*2,
             x_translate = self.int_length/2+window_width/2+self.window_width_offset,
             y_translate = self.int_width/2+window_width/2+self.window_width_offset,
-            z_translate=-1*(self.panel_padding), skip_list=self.resolve_window_skip(), keep_list=None
+            z_translate=-1*(self.panel_padding), skip_list=self.skip_windows, keep_list=None
         )
-
-    def make_cut_doors(self):
-        height = self.height
-        door_cut_width = self.inset+self.wall_width
-
-        if self.inset<0:
-            door_cut_width = -1*(self.inset)+self.wall_width
-
-        cut_door = (
-            cq.Workplane("XY")
-            .box(self.door_length, door_cut_width, self.door_height)
-            .edges("|Y").fillet(self.door_fillet)
-            .translate((0,0,-1*(height/2 - self.door_height/2)+self.wall_width))
-        )
-
-        self.cut_doors = self.make_series(
-            cut_door,
-            length_offset=self.panel_length - self.door_length + self.panel_padding*2,
-            x_translate = self.int_length/2+door_cut_width/2,
-            y_translate = self.int_width/2+door_cut_width/2,
-            z_translate=0, skip_list=None, keep_list=self.door_panels
-        )
-
-    def make_doors(self):
-        height = self.height
-        bp = BlastDoor()
-        bp.length = self.door_length
-        bp.height = self.door_height
-        bp.make()
-        door = bp.build().translate((0,0,-1*(height/2 - self.door_height/2)+self.wall_width))
-
-        x_translate = self.int_length/2+bp.width
-        y_translate = self.int_width/2+bp.width
-        if self.inset <= 0:
-            x_translate = self.int_length/2+(bp.width/4)
-            y_translate = self.int_width/2+(bp.width/4)
-
-        self.doors = self.make_series(
-            door,
-            length_offset=self.panel_length - self.door_length + self.panel_padding*2,
-            x_translate = x_translate,
-            y_translate = y_translate,
-            z_translate=0, skip_list=None, keep_list=self.door_panels
-        )
-
-    def make_ladders(self):
-        bp = Ladder()
-        bp.length = 20
-        bp.height = self.height
-        bp.make()
-        ladder = bp.build()
-
-        self.ladders = self.make_series(
-            ladder,
-            length_offset= self.panel_length - bp.length + self.panel_padding*2,
-            x_translate = self.int_length/2 - bp.width/2,
-            y_translate = self.int_width/2 - bp.width/2,
-            z_translate=0,
-            skip_list=None,
-            keep_list=self.ladder_panels
-        )
-
-    def make_roof(self):
-        length = self.length-(2*(self.inset-self.roof_overflow))
-        width = self.width-(2*(self.inset-self.roof_overflow))
-
-        print('roof length', length)
-        print ('roof width', width)
-        bp = Roof()
-        bp.height = self.roof_height
-        bp.length = length
-        bp.width = width
-        bp.inset = self.roof_inset
-        bp.wall_details_inset = self.roof_wall_details_inset
-        bp.render_floor_tiles = self.render_floor_tiles
-        bp.make()
-        self.roof=bp.build().translate((0,0, self.height/2+bp.height/2))
-
-    def make_interior_floor(self):
-        tile_size = 11
-        tile_padding = 1
-        int_length = self.int_length-20
-        int_width = self.int_width-20
-
-        floor_tile = tile.octagon_with_dots(tile_size, 2.4, 3.2, 1)
-
-        columns = math_floor(int_width/(tile_size + tile_padding))
-        rows = math_floor(int_length/(tile_size + tile_padding))
-        tile_grid = grid.make_grid(part=floor_tile, dim = [tile_size + tile_padding, tile_size + tile_padding], columns = columns, rows = rows)
-        self.interior_tiles = tile_grid.translate((0,0,-1*((self.height/2)-self.wall_width-.5)))
-        #self.interior_tiles = tile_grid
 
     def make(self):
         super().make()
@@ -354,27 +227,10 @@ class Bunker(Base):
         self.make_wedge()
         self.make_interior_rectangle()
         self.make_cut_panels()
+        self.make_detail_panels()
         self.make_base()
-
-        if self.render_panel_details:
-            self.make_detail_panels()
-
-        if self.render_windows:
-            self.make_cut_windows()
-            self.make_windows()
-
-        if self.render_doors:
-            self.make_cut_doors()
-            self.make_doors()
-
-        if self.render_ladders:
-            self.make_ladders()
-
-        if self.render_roof:
-            self.make_roof()
-
-        if self.render_floor_tiles:
-            self.make_interior_floor()
+        self.make_cut_windows()
+        self.make_windows()
 
     def build(self):
         super().build()
@@ -384,72 +240,23 @@ class Bunker(Base):
             .cut(self.interior_rectangle)
             .cut(self.cut_panels)
             .union(self.base)
+            .cut(self.cut_windows)
+            .union(self.windows)
+            .add(self.panels)
         )
-
-        if self.render_windows and self.cut_windows and self.windows:
-            scene = scene.cut(self.cut_windows).union(self.windows)
-
-        if self.render_doors and self.cut_doors and self.doors:
-            scene = scene.cut(self.cut_doors).union(self.doors)
-
-        if self.render_ladders and self.ladders:
-            scene = scene.union(self.ladders)
-
-        if self.render_roof and self.roof:
-            scene = scene.add(self.roof)
-
-        if self.render_floor_tiles and self.interior_tiles:
-            scene = scene.add(self.interior_tiles)
-
-        if self.render_panel_details and self.panels:
-            scene = scene.add(self.panels)
-
         return scene
 
-    def build_plate(self):
-        x_translate = self.length
-
-        if self.inset < 0:
-            x_translate = self.length+(-1*(self.inset*2))
-        if self.inset == 0:
-            x_translate = self.length+15
-
-        if self.render_roof and self.roof:
-            self.roof = self.roof.translate((x_translate,0,-1*(self.height+self.base_height)))
-        return self.build()
-
 bp = Bunker()
-bp.inset=-15
-bp.width=140
-bp.length=110
-bp.height=65
-
-bp.render_panel_details=True
-bp.panel_length=28
-bp.panel_width = 5
+bp.inset=20
+bp.width=150
+bp.length=120
+bp.panel_width = 6
 bp.panel_padding = 4
-
-bp.render_windows=True
-bp.skip_windows = []
 bp.window_length = 18
 bp.window_height = 8
 bp.window_frame_chamfer = 1.6
 bp.window_frame_chamfer_select = "<Z"
-
-bp.render_doors=True
-bp.door_panels = [0, 3]
-
-bp.render_ladders=True
-bp.ladder_panels = [8, 4]
-
-bp.render_floor_tiles=False
-bp.render_roof=False
 bp.make()
-
-#rec = bp.build()
-rec = bp.build_plate()
+rec = bp.build()
 
 show_object(rec)
-
-#mini = cq.Workplane("XY").cylinder(32, 12.5).translate((0,89,-1*((68/2))+(32/2)-1.5))
-#show_object(mini)

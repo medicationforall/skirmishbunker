@@ -27,7 +27,7 @@ class Bunker(Base):
         self.inner_arch_sides = 4
         self.base_height = 3
 
-        self.window_cut_width_padding = 2
+        self.window_width_offset = -2
         self.window_length = 15
         self.window_height = 20
         self.window_length_padding = 0
@@ -203,26 +203,30 @@ class Bunker(Base):
 
     def make_cut_windows(self):
         height = self.height
-        cut_width = self.wall_width + self.inset/2 + self.window_cut_width_padding
+        cut_width = self.inset+self.wall_width
         if self.inset < 0:
-            cut_width = self.wall_width - self.inset/2 + self.window_cut_width_padding
+            cut_width= -1*self.inset
+
         cut_window = (cq.Workplane("XY").box(self.window_length, cut_width,self.window_height))
         inset = self.inset
         padding = self.panel_padding
         self.cut_windows = self.make_series(
             cut_window,
             length_offset=self.panel_length - self.window_length + self.panel_padding*2,
-            x_translate = ((self.length-inset+(padding/2))/2)-cut_width/2,
-            y_translate = ((self.width-inset+(padding/2))/2)-cut_width/2,
+            x_translate = self.int_length/2+cut_width/2,
+            y_translate = self.int_width/2+cut_width/2,
             z_translate=-1*(self.panel_padding), skip_list=self.resolve_window_skip(), keep_list=None
         )
 
     def make_windows(self):
         height = self.height
-        cut_width = self.wall_width + self.inset/2 + self.window_cut_width_padding
+        window_width = self.inset
         if self.inset < 0:
-            cut_width = self.wall_width - self.inset/2 + self.window_cut_width_padding
-        frame = window.frame(self.window_length, cut_width, self.window_height, self.window_frame_width)
+            window_width= -1*self.inset
+        elif self.inset == 0:
+            window_width = self.wall_width+2
+
+        frame = window.frame(self.window_length, window_width, self.window_height, self.window_frame_width)
         frame = frame.faces("Y").edges(self.window_frame_chamfer_select).chamfer(self.window_frame_chamfer)
 
         inset = self.inset
@@ -230,29 +234,30 @@ class Bunker(Base):
         self.windows = self.make_series(
             frame,
             length_offset=self.panel_length - self.window_length + self.panel_padding*2,
-            x_translate = ((self.length-inset+(padding/2))/2)-cut_width/2,
-            y_translate = ((self.width-inset+(padding/2))/2)-cut_width/2,
+            x_translate = self.int_length/2+window_width/2+self.window_width_offset,
+            y_translate = self.int_width/2+window_width/2+self.window_width_offset,
             z_translate=-1*(self.panel_padding), skip_list=self.resolve_window_skip(), keep_list=None
         )
 
     def make_cut_doors(self):
         height = self.height
+        door_cut_width = self.inset+self.wall_width
+
+        if self.inset<0:
+            door_cut_width = -1*(self.inset)+self.wall_width
+
         cut_door = (
             cq.Workplane("XY")
-            .box(self.door_length, 20, self.door_height)
+            .box(self.door_length, door_cut_width, self.door_height)
             .edges("|Y").fillet(self.door_fillet)
             .translate((0,0,-1*(height/2 - self.door_height/2)+self.wall_width))
         )
 
-        cut_width = self.wall_width + self.inset/2 + self.window_cut_width_padding
-        if self.inset < 0:
-            cut_width = self.wall_width - self.inset/2 + self.window_cut_width_padding
-
         self.cut_doors = self.make_series(
             cut_door,
             length_offset=self.panel_length - self.door_length + self.panel_padding*2,
-            x_translate = ((self.length-self.inset+(self.panel_padding/2))/2)-cut_width/2,
-            y_translate = ((self.width-self.inset+(self.panel_padding/2))/2)-cut_width/2,
+            x_translate = self.int_length/2+door_cut_width/2,
+            y_translate = self.int_width/2+door_cut_width/2,
             z_translate=0, skip_list=None, keep_list=self.door_panels
         )
 
@@ -266,7 +271,7 @@ class Bunker(Base):
 
         x_translate = self.int_length/2+bp.width
         y_translate = self.int_width/2+bp.width
-        if self.inset < 0:
+        if self.inset <= 0:
             x_translate = self.int_length/2+(bp.width/4)
             y_translate = self.int_width/2+(bp.width/4)
 
