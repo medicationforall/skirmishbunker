@@ -363,7 +363,8 @@ class Bunker(Base):
         if self.inset == 0:
             x_translate = self.length+15
 
-        self.roof = self.roof.translate((x_translate,0,-1*(self.height+self.base_height)))
+        if self.render_roof and self.roof:
+            self.roof = self.roof.translate((x_translate,0,-1*(self.height+self.base_height)))
         return self.build()
 
 bp = Bunker()

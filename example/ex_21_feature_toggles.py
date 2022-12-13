@@ -16,6 +16,8 @@ class Bunker(Base):
         self.angle = 0
         self.inset = 10
         self.wall_width = 5
+
+        self.render_panel_details=True
         self.panel_length = 28
         self.panel_width = 6
         self.panel_padding = 4
@@ -27,6 +29,7 @@ class Bunker(Base):
         self.inner_arch_sides = 4
         self.base_height = 3
 
+        self.render_windows=True
         self.window_cut_width_padding = 2
         self.window_length = 15
         self.window_height = 20
@@ -37,20 +40,19 @@ class Bunker(Base):
         self.window_frame_chamfer_select = "<Z or >Z"
         self.skip_windows = [0]
 
+        self.render_doors=True
         self.door_panels = [0,3]
         self.door_length = 23
         self.door_height =35
         self.door_fillet = 4
 
+        self.render_roof=True
         self.roof_height = 18
         self.roof_inset = -3
         self.roof_overflow = 1
         self.roof_wall_details_inset = -0.8
 
         self.render_floor_tiles=True
-        self.render_roof=True
-        self.render_doors=True
-        self.render_windows=True
 
         self.wedge = None
         self.interior_rectangle = None
@@ -63,7 +65,6 @@ class Bunker(Base):
         self.base = None
         self.roof = None
         self.interior_tiles = None
-        self.roof_tiles = None
 
     def make_wedge(self):
         self.wedge = (
@@ -325,8 +326,10 @@ class Bunker(Base):
         self.make_wedge()
         self.make_interior_rectangle()
         self.make_cut_panels()
-        self.make_detail_panels()
         self.make_base()
+
+        if self.render_panel_details:
+            self.make_detail_panels()
 
         if self.render_windows:
             self.make_cut_windows()
@@ -364,7 +367,8 @@ class Bunker(Base):
         if self.render_floor_tiles and self.interior_tiles:
             scene = scene.add(self.interior_tiles)
 
-        scene = scene.add(self.panels)
+        if self.render_panel_details and self.panels:
+            scene = scene.add(self.panels)
 
         return scene
 
@@ -376,7 +380,8 @@ class Bunker(Base):
         if self.inset == 0:
             x_translate = self.length+15
 
-        self.roof = self.roof.translate((x_translate,0,-1*(self.height+self.base_height)))
+        if self.render_roof and self.roof:
+            self.roof = self.roof.translate((x_translate,0,-1*(self.height+self.base_height)))
         return self.build()
 
 bp = Bunker()
@@ -384,21 +389,27 @@ bp.inset=15
 bp.width=140
 bp.length=110
 bp.height=65
-bp.panel_width = 6
+
+bp.render_panel_details=True
+bp.panel_length=28
+bp.panel_width = 5
 bp.panel_padding = 4
 
+bp.render_windows=False
+bp.skip_windows = []
 bp.window_length = 18
 bp.window_height = 8
 bp.window_frame_chamfer = 1.6
 bp.window_frame_chamfer_select = "<Z"
+
+bp.render_doors=False
+bp.door_panels = [0, 3]
+
 bp.render_floor_tiles=False
 bp.render_roof=True
-bp.render_doors=False
-bp.render_windows=False
 bp.make()
-#rec = bp.build()
-rec = bp.build_plate()
 
+rec = bp.build_plate()
 show_object(rec)
 
 #mini = cq.Workplane("XY").cylinder(32, 12.5).translate((0,89,-1*((68/2))+(32/2)-1.5))

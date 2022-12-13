@@ -7,6 +7,11 @@ bp.width=140
 bp.length=110
 bp.height=65
 
+bp.render_panel_details=True
+bp.panel_length=28
+bp.panel_width = 6
+bp.panel_padding = 4
+
 bp.render_windows=True
 bp.skip_windows = []
 bp.window_length = 18
