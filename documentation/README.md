@@ -54,7 +54,7 @@ class Base:
 ## Making The Outline
 * Create the wedge outline, this is part of the blocking process.
 
-[Example 01 - Outline](../example/ex_01_outline.py)
+[Code Example 01 - Outline](../example/ex_01_outline.py)
 
 ``` python
 import cadquery as cq
