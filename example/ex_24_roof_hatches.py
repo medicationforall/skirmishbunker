@@ -1,6 +1,6 @@
 import cadquery as cq
-from . import Base
-from .Hatch import Hatch
+from skirmishbunker import Base
+from skirmishbunker import Hatch
 from cadqueryhelper import series, grid
 from cqterrain import roof, tile
 from math import floor as math_floor
@@ -33,7 +33,7 @@ class Roof(Base):
         self.hatch_panels = [8]
 
         self.render_floor_tiles = False
-        self.render_hatches = False
+        self.render_Hatches = False
 
         self.outline =None
         self.roof = None
@@ -182,7 +182,6 @@ class Roof(Base):
             cq.Workplane("XY")
             .box(cut_length,cut_width,cut_height)
             .edges("|Z").chamfer(self.hatch_cut_chamfer)
-            .faces("Z").edges().chamfer(3)
             .translate((0,0,-1*(self.height/2)+cut_height/2 ))
         )
 
@@ -238,8 +237,8 @@ class Roof(Base):
         result = (
             cq.Workplane("XY")
             .union(self.roof)
-            .cut(self.cut_walls)
-            .union(self.wall_details)
+            #.cut(self.cut_walls)
+            #.union(self.wall_details)
         )
 
         if self.render_floor_tiles and self.roof_tiles:
@@ -249,4 +248,19 @@ class Roof(Base):
             result = result.cut(self.cut_hatches)
             result = result.add(self.hatches)
 
+
         return result
+
+
+bp = Roof()
+bp.length = 110
+bp.width = 140
+bp.height = 20
+bp.inset = -5
+bp.wall_details_inset = -0.8
+bp.render_floor_tiles = True
+bp.render_hatches = True
+bp.make()
+roof = bp.build()
+
+show_object(roof)

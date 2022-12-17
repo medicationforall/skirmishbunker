@@ -4,7 +4,6 @@ from .BlastDoor import BlastDoor
 def init_door_params(self):
     self.render_doors=True
     self.door_panels = [0,3]
-    self.ladder_panels = [8]
     self.door_length = 23
     self.door_height =35
     self.door_fillet = 4

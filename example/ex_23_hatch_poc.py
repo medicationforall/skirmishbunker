@@ -1,5 +1,5 @@
 import cadquery as cq
-from . import Base
+from skirmishbunker import Base
 
 class Hatch(Base):
     def __init__(self):
@@ -133,3 +133,10 @@ class Hatch(Base):
             )
         return part
         #return self.hatch
+
+bp = Hatch()
+bp.height=6
+bp.make()
+result = bp.build()
+
+show_object(result)

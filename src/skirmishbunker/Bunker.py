@@ -142,7 +142,11 @@ class Bunker(Base):
         if self.render_ladders and self.ladders:
             scene = scene.union(self.ladders)
 
-        if self.render_roof and self.roof:
+        if self.render_roof and self.roof_bp:
+            self.roof=self.roof_bp.build().translate((0,0, self.height/2+self.roof_bp.height/2))
+
+            if self.roof_x_translate and self.roof_z_translate:
+                self.roof = self.roof.translate((self.roof_x_translate,0,self.roof_z_translate))
             scene = scene.add(self.roof)
 
         if self.render_floor_tiles and self.interior_tiles:
@@ -161,6 +165,7 @@ class Bunker(Base):
         if self.inset == 0:
             x_translate = self.length+15
 
-        if self.render_roof and self.roof:
-            self.roof = self.roof.translate((x_translate,0,-1*(self.height+self.base_height)))
+        if self.render_roof and self.roof_bp:
+            self.roof_x_translate = x_translate
+            self.roof_z_translate = -1*(self.height+self.base_height)
         return self.build()
