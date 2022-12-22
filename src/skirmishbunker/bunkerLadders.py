@@ -2,7 +2,7 @@ from cqterrain import Ladder
 
 def init_ladder_params(self):
     self.render_ladders=True
-    self.ladder_panels = [8]
+    self.ladder_panels = [0]
     self.ladders = None
 
 def make_ladders(self):
