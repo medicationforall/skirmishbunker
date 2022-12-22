@@ -4,14 +4,15 @@ from math import floor as math_floor
 
 def init_floor_params(self):
     self.render_floor_tiles=True
+    self.floor_padding = 20
 
     self.interior_tiles = None
 
 def make_interior_floor(self):
     tile_size = 11
     tile_padding = 1
-    int_length = self.int_length-20
-    int_width = self.int_width-20
+    int_length = self.int_length-self.floor_padding
+    int_width = self.int_width-self.floor_padding
 
     floor_tile = tile.octagon_with_dots(tile_size, 2.4, 3.2, 1)
 

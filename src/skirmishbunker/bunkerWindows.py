@@ -13,6 +13,12 @@ def init_window_params(self):
     self.window_frame_chamfer_select = "<Z or >Z"
     self.skip_windows = [0]
 
+    self.custom_cut_window=None
+    self.custom_cut_window_padding = 0
+
+    self.custom_window=None
+    self.custom_window_padding = 0
+
     self.cut_windows = None
     self.windows = None
 
@@ -33,12 +39,16 @@ def make_cut_windows(self):
     if self.inset < 0:
         cut_width= -1*self.inset
 
-    cut_window = (cq.Workplane("XY").box(self.window_length, cut_width,self.window_height))
+    if self.custom_cut_window:
+        cut_window = self.custom_cut_window(self)
+    else:
+        cut_window = cq.Workplane("XY").box(self.window_length, cut_width,self.window_height)
+
     inset = self.inset
     padding = self.panel_padding
     self.cut_windows = self.make_series(
         cut_window,
-        length_offset=self.panel_length - self.window_length + self.panel_padding*2,
+        length_offset=self.panel_length - self.window_length + (self.panel_padding+self.custom_cut_window_padding)*2,
         x_translate = self.int_length/2+cut_width/2,
         y_translate = self.int_width/2+cut_width/2,
         z_translate=-1*(self.panel_padding), skip_list=resolve_window_skip(self), keep_list=None
@@ -52,14 +62,17 @@ def make_windows(self):
     elif self.inset == 0:
         window_width = self.wall_width+2
 
-    frame = window.frame(self.window_length, window_width, self.window_height, self.window_frame_width)
-    frame = frame.faces("Y").edges(self.window_frame_chamfer_select).chamfer(self.window_frame_chamfer)
+    if self.custom_cut_window:
+        frame = self.custom_window(self)
+    else:
+        frame = window.frame(self.window_length, window_width, self.window_height, self.window_frame_width)
+        frame = frame.faces("Y").edges(self.window_frame_chamfer_select).chamfer(self.window_frame_chamfer)
 
     inset = self.inset
     padding = self.panel_padding
     self.windows = self.make_series(
         frame,
-        length_offset=self.panel_length - self.window_length + self.panel_padding*2,
+        length_offset=self.panel_length - self.window_length + (self.panel_padding+self.custom_window_padding)*2,
         x_translate = self.int_length/2+window_width/2+self.window_width_offset,
         y_translate = self.int_width/2+window_width/2+self.window_width_offset,
         z_translate=-1*(self.panel_padding), skip_list=resolve_window_skip(self), keep_list=None
