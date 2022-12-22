@@ -27,6 +27,9 @@ def make_roof(self):
     bp.length = length
     bp.width = width
     bp.inset = self.roof_inset
+    bp.bunker_int_length = self.int_length
+    bp.bunker_int_width = self.int_width
+
     bp.wall_details_inset = self.roof_wall_details_inset
     bp.render_floor_tiles = self.render_floor_tiles
     bp.render_hatches = self.render_ladders

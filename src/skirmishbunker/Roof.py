@@ -67,6 +67,7 @@ class Roof(Base):
         if self.bunker_int_length and self.bunker_int_width:
             length = self.bunker_int_length
             width = self.bunker_int_width
+            print('attempting to assign internal length and width '+str(length)+ " " +str(width))
 
         x_panels_size = math_floor(length / (self.panel_length + self.panel_padding))
         y_panels_size = math_floor(width / (self.panel_length + self.panel_padding))
