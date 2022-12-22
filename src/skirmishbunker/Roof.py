@@ -12,6 +12,8 @@ class Roof(Base):
         self.length=120
         self.height=30
         self.inset=10
+        self.bunker_int_length=None
+        self.bunker_int_width=None
         self.wall_width = 5
         self.angle = 0
 
@@ -60,8 +62,11 @@ class Roof(Base):
     def make_series(self, shape, length_offset, x_translate=0, y_translate=0, z_translate=0, skip_list=None, keep_list=None):
         length = self.length - (self.wall_width*2)
         width = self.width - (self.wall_width*2)
-        inset = self.inset
         p_width = self.panel_width
+
+        if self.bunker_int_length and self.bunker_int_width:
+            length = self.bunker_int_length
+            width = self.bunker_int_width
 
         x_panels_size = math_floor(length / (self.panel_length + self.panel_padding))
         y_panels_size = math_floor(width / (self.panel_length + self.panel_padding))

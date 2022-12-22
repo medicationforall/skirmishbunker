@@ -12,6 +12,8 @@ class Roof(Base):
         self.length=120
         self.height=30
         self.inset=10
+        self.bunker_int_length=None
+        self.bunker_int_width=None
         self.wall_width = 5
         self.angle = 0
 
@@ -33,7 +35,7 @@ class Roof(Base):
         self.hatch_panels = [8]
 
         self.render_floor_tiles = False
-        self.render_Hatches = False
+        self.render_hatches = False
 
         self.outline =None
         self.roof = None
@@ -60,8 +62,11 @@ class Roof(Base):
     def make_series(self, shape, length_offset, x_translate=0, y_translate=0, z_translate=0, skip_list=None, keep_list=None):
         length = self.length - (self.wall_width*2)
         width = self.width - (self.wall_width*2)
-        inset = self.inset
         p_width = self.panel_width
+
+        if self.bunker_int_length and self.bunker_int_width:
+            length = self.bunker_int_length
+            width = self.bunker_int_width
 
         x_panels_size = math_floor(length / (self.panel_length + self.panel_padding))
         y_panels_size = math_floor(width / (self.panel_length + self.panel_padding))
@@ -182,6 +187,7 @@ class Roof(Base):
             cq.Workplane("XY")
             .box(cut_length,cut_width,cut_height)
             .edges("|Z").chamfer(self.hatch_cut_chamfer)
+            .faces("Z").edges().chamfer(3)
             .translate((0,0,-1*(self.height/2)+cut_height/2 ))
         )
 
@@ -237,8 +243,8 @@ class Roof(Base):
         result = (
             cq.Workplane("XY")
             .union(self.roof)
-            #.cut(self.cut_walls)
-            #.union(self.wall_details)
+            .cut(self.cut_walls)
+            .union(self.wall_details)
         )
 
         if self.render_floor_tiles and self.roof_tiles:
@@ -247,7 +253,6 @@ class Roof(Base):
         if self.render_hatches and self.hatches:
             result = result.cut(self.cut_hatches)
             result = result.add(self.hatches)
-
 
         return result
 
@@ -260,6 +265,9 @@ bp.inset = -5
 bp.wall_details_inset = -0.8
 bp.render_floor_tiles = True
 bp.render_hatches = True
+bp.bunker_int_length=80
+bp.bunker_int_width=100
+bp.hatch_panels = [1]
 bp.make()
 roof = bp.build()
 

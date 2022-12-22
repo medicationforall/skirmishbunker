@@ -42,7 +42,6 @@ class Bunker(Base):
         length = self.int_length
         width = self.int_width
         padding = self.panel_padding
-        inset = self.inset
         p_width = self.panel_width
 
         x_panels_size = math_floor(length / (self.panel_length + self.panel_padding))
