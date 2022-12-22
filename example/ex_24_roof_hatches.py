@@ -32,7 +32,7 @@ class Roof(Base):
         self.hatch_height = 6
         self.hatch_cut_inset = 2
         self.hatch_cut_chamfer = 2
-        self.hatch_panels = [8]
+        self.hatch_panels = [0]
 
         self.render_floor_tiles = False
         self.render_hatches = False
@@ -60,16 +60,16 @@ class Roof(Base):
         )
 
     def make_series(self, shape, length_offset, x_translate=0, y_translate=0, z_translate=0, skip_list=None, keep_list=None):
-        length = self.length - (self.wall_width*2)
-        width = self.width - (self.wall_width*2)
+        length_2 = self.length - (self.wall_width*2)
+        width_2 = self.width - (self.wall_width*2)
         p_width = self.panel_width
 
         if self.bunker_int_length and self.bunker_int_width:
-            length = self.bunker_int_length
-            width = self.bunker_int_width
+            length_2 = self.bunker_int_length
+            width_2 = self.bunker_int_width
 
-        x_panels_size = math_floor(length / (self.panel_length + self.panel_padding))
-        y_panels_size = math_floor(width / (self.panel_length + self.panel_padding))
+        x_panels_size = math_floor(length_2 / (self.panel_length + self.panel_padding))
+        y_panels_size = math_floor(width_2 / (self.panel_length + self.panel_padding))
 
         x_shapes = series(shape, x_panels_size, length_offset=length_offset)
         y_shapes = series(shape, y_panels_size, length_offset=length_offset)
@@ -191,11 +191,12 @@ class Roof(Base):
             .translate((0,0,-1*(self.height/2)+cut_height/2 ))
         )
 
+        length_offset= self.panel_length - cut_length + self.panel_padding*2
         hatch_cut_series = self.make_series(
             hatch_cut,
-            2,
-            x_translate=(self.length/2)-self.wall_width*4,
-            y_translate=(self.width/2)-self.wall_width*4,
+            length_offset,
+            x_translate=(self.bunker_int_length/2)-cut_width/2,
+            y_translate=(self.bunker_int_width/2)-cut_width/2,
             z_translate=0,
             skip_list=None,
             keep_list=self.hatch_panels
@@ -213,11 +214,12 @@ class Roof(Base):
             .translate((0,0,-1*(self.height/2)+self.hatch_height/2 +self.wall_width))
         )
 
+        length_offset= self.panel_length - bp.length + self.panel_padding*2
         hatch_series = self.make_series(
             hatch,
-            1,
-            x_translate=(self.length/2)-self.wall_width*4,
-            y_translate=(self.width/2)-self.wall_width*4,
+            length_offset,
+            x_translate=(self.bunker_int_length/2)-bp.width/2,
+            y_translate=(self.bunker_int_width/2)-bp.width/2,
             z_translate=0,
             skip_list=None,
             keep_list=self.hatch_panels
@@ -258,16 +260,17 @@ class Roof(Base):
 
 
 bp = Roof()
-bp.length = 110
-bp.width = 140
+bp.length = 152
+bp.width = 152
 bp.height = 20
 bp.inset = -5
+bp.panel_padding=4
 bp.wall_details_inset = -0.8
 bp.render_floor_tiles = True
 bp.render_hatches = True
-bp.bunker_int_length=80
-bp.bunker_int_width=100
-bp.hatch_panels = [1]
+bp.bunker_int_length=120
+bp.bunker_int_width=120
+bp.hatch_panels = [0,1,2]
 bp.make()
 roof = bp.build()
 

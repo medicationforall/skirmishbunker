@@ -217,7 +217,7 @@ class Roof(Base):
         length_offset= self.panel_length - bp.length + self.panel_padding*2
         hatch_series = self.make_series(
             hatch,
-            length_offset+1,
+            length_offset,
             x_translate=(self.bunker_int_length/2)-bp.width/2,
             y_translate=(self.bunker_int_width/2)-bp.width/2,
             z_translate=0,
