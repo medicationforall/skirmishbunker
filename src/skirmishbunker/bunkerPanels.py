@@ -12,7 +12,6 @@ def init_bunker_params(self):
     self.arch_inner_height = 6
     self.inner_arch_top = 5
     self.inner_arch_sides = 4
-    self.base_height = 3
 
     self.panels = None
     self.cut_panels = None

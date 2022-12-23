@@ -1,7 +1,7 @@
 from cqterrain import Ladder
 
 def init_ladder_params(self):
-    self.render_ladders=True
+    self.render_ladders = True
     self.ladder_panels = [0]
     self.ladders = None
 

@@ -6,6 +6,7 @@ def init_body_params(self):
     self.height = 75
     self.int_length = None
     self.int_width = None
+    self.base_height = 3
 
     self.angle = 0
     self.inset = 10

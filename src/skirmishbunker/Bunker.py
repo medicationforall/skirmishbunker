@@ -25,6 +25,7 @@ from .bunkerDoors import init_door_params, make_cut_doors, make_doors
 from .bunkerRoof import init_roof_params, make_roof
 from .bunkerFloor import init_floor_params, make_interior_floor
 from .bunkerLadders import init_ladder_params, make_ladders
+from .bunkerFloorCuts import init_floor_cut, make_floor_cuts
 
 class Bunker(Base):
     def __init__(self):
@@ -37,6 +38,7 @@ class Bunker(Base):
         init_roof_params(self)
         init_floor_params(self)
         init_ladder_params(self)
+        init_floor_cut(self)
 
     def make_series(self, shape, length_offset, x_translate=0, y_translate=0, z_translate=0, skip_list=None, keep_list=None):
         length = self.int_length
@@ -122,6 +124,9 @@ class Bunker(Base):
         if self.render_floor_tiles:
             make_interior_floor(self)
 
+        if self.render_floor_cuts:
+            make_floor_cuts(self)
+
     def build(self):
         super().build()
         scene = (
@@ -150,6 +155,9 @@ class Bunker(Base):
 
         if self.render_floor_tiles and self.interior_tiles:
             scene = scene.add(self.interior_tiles)
+
+        if self.render_floor_cuts and self.floor_cuts:
+            scene = scene.add(self.floor_cuts)
 
         if self.render_panel_details and self.panels:
             scene = scene.add(self.panels)
