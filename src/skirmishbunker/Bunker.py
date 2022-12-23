@@ -26,6 +26,7 @@ from .bunkerRoof import init_roof_params, make_roof
 from .bunkerFloor import init_floor_params, make_interior_floor
 from .bunkerLadders import init_ladder_params, make_ladders
 from .bunkerFloorCuts import init_floor_cut, make_floor_cuts
+from .bunkerPips import init_pip_params, make_pips, make_cut_pips
 
 class Bunker(Base):
     def __init__(self):
@@ -39,6 +40,7 @@ class Bunker(Base):
         init_floor_params(self)
         init_ladder_params(self)
         init_floor_cut(self)
+        init_pip_params(self)
 
     def make_series(self, shape, length_offset, x_translate=0, y_translate=0, z_translate=0, skip_list=None, keep_list=None):
         length = self.int_length
@@ -127,6 +129,10 @@ class Bunker(Base):
         if self.render_floor_cuts:
             make_floor_cuts(self)
 
+        if self.render_pips:
+            make_pips(self)
+            make_cut_pips(self)
+
     def build(self):
         super().build()
         scene = (
@@ -136,6 +142,13 @@ class Bunker(Base):
             .cut(self.cut_panels)
             .union(self.base)
         )
+
+        if self.render_pips and self.pips:
+            if self.render_magnets:
+                scene = scene.cut(self.pips)
+            else:
+                scene = scene.union(self.pips)
+            scene = scene.cut(self.cut_pips)
 
         if self.render_windows and self.cut_windows and self.windows:
             scene = scene.cut(self.cut_windows).union(self.windows)

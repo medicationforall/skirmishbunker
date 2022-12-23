@@ -28,6 +28,11 @@ bp.ladder_panels = [8]
 bp.render_floor_tiles=True
 bp.render_roof=True
 
+#bp.floor_tile_size = 15
+#bp.floor_chamfer_size = 4.2
+#bp.floor_mid_tile_size = 5.6
+bp.floor_padding = -5
+
 bp.render_floor_cuts = True
 
 
