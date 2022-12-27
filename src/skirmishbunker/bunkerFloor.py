@@ -11,6 +11,8 @@ def init_floor_params(self):
     self.floor_mid_tile_size = 3.2
     self.floor_tile_padding = 1
 
+    self.custom_floor_tile = None
+
     self.interior_tiles = None
 
 def make_interior_floor(self):
@@ -19,7 +21,10 @@ def make_interior_floor(self):
     int_length = self.int_length-self.floor_padding
     int_width = self.int_width-self.floor_padding
 
-    floor_tile = tile.octagon_with_dots_2(tile_size, self.floor_chamfer_size, self.floor_mid_tile_size, tile_padding, self.floor_tile_height)
+    if self.custom_floor_tile:
+        floor_tile = self.custom_floor_tile(self)
+    else:
+        floor_tile = tile.octagon_with_dots_2(tile_size, self.floor_chamfer_size, self.floor_mid_tile_size, tile_padding, self.floor_tile_height)
 
     columns = math_floor(int_width/(tile_size + tile_padding))
     rows = math_floor(int_length/(tile_size + tile_padding))

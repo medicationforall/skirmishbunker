@@ -28,15 +28,15 @@ bp.ladder_panels = [8]
 bp.render_floor_tiles=False
 bp.render_roof=True
 
-#bp.floor_tile_size = 15
-#bp.floor_chamfer_size = 4.2
-#bp.floor_mid_tile_size = 5.6
 bp.floor_padding = -5
 
 bp.render_floor_cuts = True
 bp.render_pips=True
+bp.render_magnets=False
 
 bp.make()
 rec = bp.build_plate()
 
-cq.exporters.export(rec,'stl/bunker.stl')
+show_object(rec)
+
+#cq.exporters.export(rec,'stl/bunker.stl')
