@@ -133,8 +133,7 @@ class Bunker(Base):
             make_pips(self)
             make_cut_pips(self)
 
-    def build(self):
-        super().build()
+    def build_body(self):
         scene = (
             cq.Workplane("XY")
             .union(self.wedge)
@@ -159,14 +158,6 @@ class Bunker(Base):
         if self.render_floor_tiles and self.interior_tiles:
             scene = scene.union(self.interior_tiles)
 
-        if self.render_roof and self.roof_bp:
-            self.roof=self.roof_bp.build().translate((0,0, self.height/2+self.roof_bp.height/2))
-
-            if self.roof_x_translate != None and self.roof_z_translate:
-                print('build plate translate')
-                self.roof = self.roof.translate((self.roof_x_translate,0,self.roof_z_translate))
-            scene = scene.add(self.roof)
-
         if self.render_floor_cuts and self.floor_cuts:
             scene = scene.cut(self.floor_cuts)
 
@@ -175,6 +166,23 @@ class Bunker(Base):
 
         if self.render_panel_details and self.panels:
             scene = scene.add(self.panels)
+
+        return scene
+
+    def build_roof(self, z_translate=0):
+        self.roof = self.roof_bp.build().translate((0, 0, z_translate))
+
+        if self.roof_x_translate != None and self.roof_z_translate:
+            print('build plate translate')
+            self.roof = self.roof.translate((self.roof_x_translate,0,self.roof_z_translate))
+
+        return self.roof
+
+    def build(self):
+        super().build()
+        scene = self.build_body()
+        if self.render_roof and self.roof_bp:
+            scene.add(self.build_roof(z_translate = self.height/2+self.roof_bp.height/2))
 
         return scene
 
@@ -189,5 +197,5 @@ class Bunker(Base):
         if self.render_roof and self.roof_bp:
             self.roof_x_translate = x_translate
             self.roof_z_translate = -1*(self.height+self.base_height)
-            
+
         return self.build()
