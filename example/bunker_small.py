@@ -50,17 +50,17 @@ bp.render_floor_tiles=True
 bp.render_roof=True
 
 bp.floor_padding = -5
-bp.floor_tile_padding=.5
+bp.floor_tile_padding=0#.5
 
 bp.render_floor_cuts = False
 bp.render_pips=True
 bp.render_magnets=False
 
-bp.custom_floor_tile = custom_windmill_tile
+bp.custom_floor_tile = custom_star_tile
 
 bp.make()
 rec = bp.build_plate()
 
 #show_object(rec)
 
-cq.exporters.export(rec,'stl/bunker_small.stl')
+cq.exporters.export(rec,'stl/bunker_small2.stl')
