@@ -38,5 +38,12 @@ def make_roof(self):
     bp.panel_length = self.panel_length
     bp.panel_width = self.panel_width
     bp.panel_padding = self.panel_padding
+
+    bp.render_pips = self.render_pips
+    bp.pip_radius = self.pip_radius
+    bp.pip_height = self.pip_height
+    bp.pip_padding = self.pip_padding
+
+    bp.roof_overflow = self.roof_overflow
     bp.make()
     self.roof_bp = bp

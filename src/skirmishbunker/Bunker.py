@@ -162,7 +162,8 @@ class Bunker(Base):
         if self.render_roof and self.roof_bp:
             self.roof=self.roof_bp.build().translate((0,0, self.height/2+self.roof_bp.height/2))
 
-            if self.roof_x_translate and self.roof_z_translate:
+            if self.roof_x_translate != None and self.roof_z_translate:
+                print('build plate translate')
                 self.roof = self.roof.translate((self.roof_x_translate,0,self.roof_z_translate))
             scene = scene.add(self.roof)
 
@@ -188,4 +189,5 @@ class Bunker(Base):
         if self.render_roof and self.roof_bp:
             self.roof_x_translate = x_translate
             self.roof_z_translate = -1*(self.height+self.base_height)
+            
         return self.build()

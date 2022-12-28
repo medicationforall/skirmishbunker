@@ -12,7 +12,7 @@ def init_pip_params(self):
 def make_pips(self):
     pip = cq.Workplane("XY").cylinder(self.pip_height, self.pip_radius)
     if self.render_magnets:
-        pip = cq.Workplane("XY").cylinder(self.pip_height, self.pip_radius+.04)
+        pip = cq.Workplane("XY").cylinder(self.pip_height, self.pip_radius+.1)
 
     x_translate = self.length/2-self.inset-self.pip_radius-self.pip_padding
     y_translate = self.width/2-self.inset-self.pip_radius-self.pip_padding
@@ -32,7 +32,7 @@ def make_pips(self):
     self.pips = pips
 
 def make_cut_pips(self):
-    pip = cq.Workplane("XY").cylinder(self.pip_height, self.pip_radius+.04)
+    pip = cq.Workplane("XY").cylinder(self.pip_height, self.pip_radius+.1)
 
     x_translate = self.length/2-self.pip_radius-self.pip_padding
     y_translate = self.width/2-self.pip_radius-self.pip_padding

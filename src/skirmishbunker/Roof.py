@@ -34,8 +34,14 @@ class Roof(Base):
         self.hatch_cut_chamfer = 2
         self.hatch_panels = [0]
 
+        self.pip_radius = 1.5
+        self.pip_height = 1.5
+        self.pip_padding = 1.5
+        self.roof_overflow = 0
+
         self.render_floor_tiles = False
         self.render_hatches = False
+        self.render_pips = False
 
         self.outline =None
         self.roof = None
@@ -44,6 +50,7 @@ class Roof(Base):
         self.roof_tiles = None
         self.cut_hatches = None
         self.hatches = None
+        self.cut_pips = None
 
 
     def make_roof(self):
@@ -226,6 +233,22 @@ class Roof(Base):
         )
         self.hatches = hatch_series
 
+    def make_cut_pips(self):
+        pip = cq.Workplane("XY").cylinder(self.pip_height, self.pip_radius+.1)
+
+        x_translate = self.length/2-self.pip_radius-self.pip_padding-self.roof_overflow
+        y_translate = self.width/2-self.pip_radius-self.pip_padding-self.roof_overflow
+        z_translate = -1*(self.height/2 - self.pip_height/2)
+
+        pips = (
+            cq.Workplane("XY")
+            .union(pip.translate((x_translate, y_translate, z_translate)))
+            .union(pip.translate((-1*x_translate, y_translate, z_translate)))
+            .union(pip.translate((-1*x_translate, -1*y_translate, z_translate)))
+            .union(pip.translate((x_translate, -1*y_translate, z_translate)))
+        )
+        self.cut_pips = pips
+
     def make(self):
         super().make()
         self.angle =roof.angle(self.inset, self.height)
@@ -240,6 +263,9 @@ class Roof(Base):
             self.make_cut_hatches()
             self.make_hatches()
 
+        if self.render_pips:
+            self.make_cut_pips()
+
     def build(self):
         super().make()
         result = (
@@ -248,6 +274,9 @@ class Roof(Base):
             .cut(self.cut_walls)
             .union(self.wall_details)
         )
+
+        if self.render_pips and self.cut_pips:
+            result = result.cut(self.cut_pips)
 
         if self.render_floor_tiles and self.roof_tiles:
             result = result.add(self.roof_tiles)
