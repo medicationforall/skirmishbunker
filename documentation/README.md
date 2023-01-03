@@ -3,7 +3,11 @@
 ## Inspiration
 
 https://www.reddit.com/r/PrintedMinis/comments/rgb3ln/i_painted_a_classic_warhammer_40k_bunker/
-![](https://i.redd.it/sv2qlkwiaj581.jpg)
+<br />
+https://cults3d.com/en/users/Curis/creations
+<br />
+https://www.ninjabread.co.uk/
+[![](https://i.redd.it/sv2qlkwiaj581.jpg)](https://cults3d.com/en/3d-model/game/glorious-1990s-bunker-fortifcation-terrain)
 
 https://www.pinterest.com/pin/bunker-part-2--483855553698959743/
 ![](https://i.pinimg.com/originals/03/13/93/031393ff27641fc9b0f084084672d858.jpg)
