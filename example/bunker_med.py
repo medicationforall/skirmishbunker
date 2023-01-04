@@ -56,7 +56,7 @@ bp.render_floor_cuts = False
 bp.render_pips=True
 bp.render_magnets=True
 
-bp.custom_floor_tile = custom_windmill_tile
+#bp.custom_floor_tile = custom_windmill_tile
 
 bp.make()
 

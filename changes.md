@@ -1,4 +1,7 @@
 ## Main wip
+* Increased Pip Cuts height by .2 mm to try account for magnet sizing
+  * Affected Bunker and roof code
+* Updated medium bunker to use regular flooring
 
 ## 1.1.0 Customization
 * Added support for custom window cuts
