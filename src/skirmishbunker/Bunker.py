@@ -101,10 +101,16 @@ class Bunker(Base):
         super().make()
         self.angle = roof.angle(self.inset, self.height)
 
+        # order matters
         make_wedge(self)
         make_interior_rectangle(self)
-        make_base(self)
-        make_cut_panels(self)
+
+        if self.render_base:
+            make_base(self)
+
+        if self.render_cut_panels:
+            # depends on make_interior_rectangle
+            make_cut_panels(self)
 
         if self.render_panel_details:
             make_detail_panels(self)
@@ -137,10 +143,16 @@ class Bunker(Base):
         scene = (
             cq.Workplane("XY")
             .union(self.wedge)
-            .cut(self.interior_rectangle)
-            .cut(self.cut_panels)
-            .union(self.base)
         )
+
+        if self.render_interior:
+            scene = scene.cut(self.interior_rectangle)
+
+        if self.render_base and self.base:
+            scene = scene.union(self.base)
+
+        if self.render_cut_panels and self.cut_panels:
+            scene = scene.cut(self.cut_panels)
 
         if self.render_pips and self.pips:
             if self.render_magnets:

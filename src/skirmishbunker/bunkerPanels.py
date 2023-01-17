@@ -3,6 +3,7 @@ from cadqueryhelper import shape
 
 def init_bunker_params(self):
     self.render_panel_details=True
+    self.render_cut_panels=True
     self.panel_length = 28
     self.panel_width = 6
     self.panel_padding = 4

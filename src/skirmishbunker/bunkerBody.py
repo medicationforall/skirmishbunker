@@ -11,6 +11,8 @@ def init_body_params(self):
     self.angle = 0
     self.inset = 10
     self.wall_width = 5
+    self.render_interior=True
+    self.render_base=True
 
     self.wedge = None
     self.interior_rectangle = None
