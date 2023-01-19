@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skirmishbunker"
-version = "1.1.0"
+version = "1.1.1"
 authors = [
   { name="James Adams", email="inklink28@gmail.com" }
 ]
@@ -19,11 +19,11 @@ classifiers = [
 ]
 
 dependencies = [
-"cadquery==2.2.0b0",
+"cadquery==2.2.0b2",
 "numpy-stl",
 'cqmore @ git+https://github.com/JustinSDK/cqMore@a490603',
-'cadqueryhelper @ git+https://github.com/medicationforall/cadqueryhelper@0.0.7',
-'cqterrain @ git+https://github.com/medicationforall/cqterrain@0.1.0'
+'cadqueryhelper @ git+https://github.com/medicationforall/cadqueryhelper@0.0.8',
+'cqterrain @ git+https://github.com/medicationforall/cqterrain@0.1.1'
 ]
 
 
