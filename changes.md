@@ -1,5 +1,8 @@
 ## Main wip
 
+## 1.1.2
+* Jamie Broke the __init__.py at the root directory of cqterrain
+
 ## 1.1.1 Updated version dependencies, added better support for magnets
 * Increased Pip Cuts height by .2 mm to try account for magnet sizing
   * Affected Bunker and roof code
