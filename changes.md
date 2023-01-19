@@ -1,7 +1,12 @@
 ## Main wip
+
+## 1.1.1 Updated version dependencies, added better support for magnets
 * Increased Pip Cuts height by .2 mm to try account for magnet sizing
   * Affected Bunker and roof code
 * Updated medium bunker to use regular flooring
+* Updated Cadquery version
+* cadqueryhelper 0.0.8
+* cqterrain 0.1.1
 
 ## 1.1.0 Customization
 * Added support for custom window cuts
