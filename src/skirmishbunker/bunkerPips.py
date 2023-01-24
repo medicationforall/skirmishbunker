@@ -3,8 +3,8 @@ import cadquery as cq
 def init_pip_params(self):
     self.render_pips = False
     self.render_magnets = False
-    self.pip_radius = 1.5
-    self.pip_height = 1.5
+    self.pip_radius = 1.55
+    self.pip_height = 2.1
     self.pip_padding = 1.5
     self.pips = None
     self.cut_pips = None
@@ -12,7 +12,7 @@ def init_pip_params(self):
 def make_pips(self):
     pip = cq.Workplane("XY").cylinder(self.pip_height, self.pip_radius)
     if self.render_magnets:
-        pip = cq.Workplane("XY").cylinder(self.pip_height+.2, self.pip_radius+.1)
+        pip = cq.Workplane("XY").cylinder(self.pip_height, self.pip_radius)
 
     x_translate = self.length/2-self.inset-self.pip_radius-self.pip_padding
     y_translate = self.width/2-self.inset-self.pip_radius-self.pip_padding
@@ -32,7 +32,7 @@ def make_pips(self):
     self.pips = pips
 
 def make_cut_pips(self):
-    pip = cq.Workplane("XY").cylinder(self.pip_height+.2, self.pip_radius+.1)
+    pip = cq.Workplane("XY").cylinder(self.pip_height, self.pip_radius)
 
     x_translate = self.length/2-self.pip_radius-self.pip_padding
     y_translate = self.width/2-self.pip_radius-self.pip_padding
