@@ -29,5 +29,8 @@ def make_interior_floor(self):
     columns = math_floor(int_width/(tile_size + tile_padding))
     rows = math_floor(int_length/(tile_size + tile_padding))
     tile_grid = grid.make_grid(part=floor_tile, dim = [tile_size + tile_padding, tile_size + tile_padding], columns = columns, rows = rows)
-    self.interior_tiles = tile_grid.translate((0,0,-1*((self.height/2)-self.wall_width-(tile_padding/2))))
+    z_tile_translate = -1*(self.height/2-self.floor_tile_height-self.wall_width)
+
+    #print('z_tile_translate',z_tile_translate)
+    self.interior_tiles = tile_grid.translate((0,0,z_tile_translate))
     #self.interior_tiles = tile_grid
