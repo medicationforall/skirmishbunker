@@ -34,8 +34,8 @@ class Roof(Base):
         self.hatch_cut_chamfer = 2
         self.hatch_panels = [0]
 
-        self.pip_radius = 1.5
-        self.pip_height = 1.5
+        self.pip_radius = 1.55
+        self.pip_height = 2.1
         self.pip_padding = 1.5
         self.roof_overflow = 0
 
@@ -234,7 +234,7 @@ class Roof(Base):
         self.hatches = hatch_series
 
     def make_cut_pips(self):
-        pip = cq.Workplane("XY").cylinder(self.pip_height+.2, self.pip_radius+.1)
+        pip = cq.Workplane("XY").cylinder(self.pip_height, self.pip_radius)
 
         x_translate = self.length/2-self.pip_radius-self.pip_padding-self.roof_overflow
         y_translate = self.width/2-self.pip_radius-self.pip_padding-self.roof_overflow
