@@ -1,7 +1,8 @@
 ## Main wip
 * Increased magnet height from 1.7 to 2.1
-* Added catwalk generator
-* Fixed roof magnet cuts
+* Added catwalk generator.
+* Fixed roof magnet cuts.
+* Attempt to fix bunker floor placement.
 
 ## 1.1.2
 * Jamie Broke the __init__.py at the root directory of cqterrain
