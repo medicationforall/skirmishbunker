@@ -1,4 +1,6 @@
 ## Main wip
+* Increased magnet height from 1.7 to 2.1
+* Added catwalk generator
 
 ## 1.1.2
 * Jamie Broke the __init__.py at the root directory of cqterrain
