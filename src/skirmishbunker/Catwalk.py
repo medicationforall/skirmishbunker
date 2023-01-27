@@ -1,6 +1,6 @@
 import cadquery as cq
 from skirmishbunker import Base
-from cadqueryhelper import shape, grid
+from cadqueryhelper import shape, grid, series
 import math
 
 class Catwalk(Base):
@@ -30,7 +30,7 @@ class Catwalk(Base):
         self.render_floor = True
         self.floor_height = 1
         self.floor_tile_size = 12
-        self.floor_tile_padding = 1
+        self.floor_tile_padding = 2
 
         self.platform = None
         self.cut_magnets = None
@@ -102,6 +102,22 @@ class Catwalk(Base):
             .faces("Z").edges("<X").chamfer(self.wall_height/2)
         )
 
+        arch_cut = shape.arch_round(4,self.wall_width, self.wall_height-4).translate((0,0,-2))
+        cut_size = math.floor(self.wall_length / (4+2))
+
+        def arch_cut_operation(series_shape, size, i, bounding_box):
+
+            if i ==0:
+                arch_cut = shape.arch_round(4,self.wall_width, self.wall_height-12).translate((0,0,-6))
+                return arch_cut
+            elif i ==1:
+                arch_cut = shape.arch_round(4,self.wall_width, self.wall_height-8).translate((0,0,-4))
+                return arch_cut
+            return series_shape
+
+        arch_cuts = series(arch_cut, length_offset=2.7, size=cut_size, operation=arch_cut_operation)
+        wall = wall.cut(arch_cuts)
+
         corner = (
             cq.Workplane("XY")
             .union(wall.translate((-1*(self.wall_length/2-self.wall_width/2),0,0)))
@@ -128,13 +144,14 @@ class Catwalk(Base):
             .union(corner.rotate((0,0,1),(0,0,0), -90).translate((x_translate,-1*y_translate,0)))
         )
         self.corner_walls = corners
+        #self.corner_walls = arch_cut
 
     def __make_floor_tiles(self):
         diamond = shape.diamond(
             self.floor_tile_size,
             self.floor_tile_size,
             self.floor_height
-        ).faces("Z").chamfer(.8)
+        ).faces("-Z").chamfer(.4)
 
         rows = math.floor((self.length-self.height) / (self.floor_tile_size+self.floor_tile_padding))
         colums = math.floor((self.width-self.height) / ((self.floor_tile_size+self.floor_tile_padding)/2))
@@ -152,9 +169,9 @@ class Catwalk(Base):
             .box(
                 self.length-self.height,
                 self.width-self.height,
-                self.height
+                self.height/2
             )
-            .translate((0,0,self.height))
+            .translate((0,0,self.height/2))
         )
 
         walkway_length = self.interior_length + self.fit_padding
@@ -164,9 +181,9 @@ class Catwalk(Base):
             .box(
                 walkway_length,
                 walkway_width,
-                self.height
+                self.height/2
             )
-            .translate((0,0,self.height))
+            .translate((0,0,self.height/2))
         )
 
         walway = outline.cut(walkway_cut)
@@ -176,7 +193,7 @@ class Catwalk(Base):
             self.floor_height/2+self.height/2
         ))
 
-        self.floor_tiles = walway.intersect(floor_tiles)
+        self.floor_tiles = walway.intersect(floor_tiles).translate((0,0,-1))
 
         #self.floor_tiles = floor_tiles
 
@@ -208,7 +225,7 @@ class Catwalk(Base):
             scene = scene.union(self.corner_walls)
 
         if self.render_floor and self.floor_tiles:
-            scene = scene.union(self.floor_tiles)
+            scene = scene.cut(self.floor_tiles)
 
         return scene
 
