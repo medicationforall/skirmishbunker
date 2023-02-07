@@ -1,4 +1,5 @@
 ## Main wip
+* Added Split Door
 * Increased magnet height from 1.7 to 2.1
 * Added catwalk generator.
 * Fixed roof magnet cuts.

@@ -45,7 +45,13 @@ def arch_detail(self):
     panel_outline = cq.Workplane("XY").box(p_length, p_width, height - padding)
     arch = shape.arch_pointed(p_length+self.arch_padding_sides, p_width/2 , height - padding + self.arch_padding_top, ((height - padding)/2) + self.arch_inner_height).translate((0,-1*(p_width/4),0))
     inner_arch = shape.arch_pointed(p_length + self.arch_padding_sides - self.inner_arch_sides, p_width , height - padding + self.arch_padding_top - self.inner_arch_top, ((height - padding)/2) + self.arch_inner_height - self.inner_arch_sides)
-    inner_inner_arch = shape.arch_pointed(p_length + self.arch_padding_sides - self.inner_arch_sides-3, p_width/2 , height - padding + self.arch_padding_top - self.inner_arch_top-3, ((height - padding)/2) + self.arch_inner_height - self.inner_arch_sides).translate((0,(p_width/4),-1.5))
+    inner_inner_arch = shape.arch_pointed(
+        p_length - self.inner_arch_sides,
+        p_width/2,
+        height - padding - self.inner_arch_top,
+        ((height - padding)/2) + self.arch_inner_height - self.inner_arch_sides
+    ).translate((0,(p_width/4),-1.5))
+
     panel_back = cq.Workplane("XY").box(p_length, p_width/2, height - padding).translate((0,(p_width/4),0))
     panel_detail = cq.Workplane("XY").add(panel_back).add(arch)
     inside_arch = panel_back.cut(inner_inner_arch)
