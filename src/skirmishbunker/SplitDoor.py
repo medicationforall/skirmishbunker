@@ -6,11 +6,12 @@ class SplitDoor(Base):
     def __init__(self):
         super().__init__()
         self.length = 25
-        self.width = 3.5
+        self.width = 2
         self.height = 40
         self.base_height = 20
         self.open = 0
         self.bar_height=1
+        self.chamfer_minus = 0.1
 
         self.cut_door = None
         self.split_door = None
@@ -42,7 +43,7 @@ class SplitDoor(Base):
             .rotate((1,0,0),(0,0,0),-90)
             .rotate((0,1,0),(0,0,0),90)
             .faces("<X").edges("Z")
-            .chamfer(self.width/2-.01)
+            .chamfer(self.width/2-self.chamfer_minus)
             .translate((self.length/4-divide/2,0,0))
 
         )
@@ -60,7 +61,7 @@ class SplitDoor(Base):
             .add(self.cut_door)
             .cut(door_left)
             .faces(">X").edges("Z")
-            .chamfer(self.width/2-.01)
+            .chamfer(self.width/2-self.chamfer_minus)
 
         )
         bar = (

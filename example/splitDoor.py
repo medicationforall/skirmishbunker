@@ -2,8 +2,13 @@ import cadquery as cq
 from skirmishbunker import SplitDoor
 
 bp = SplitDoor()
-bp.open=3
+bp.width = 24
+bp.width = 2
+bp.chamfer_minus = 0.1
+bp.height = 56
+bp.base_height = 32.5
+bp.open=5
 bp.make()
-blast_door = bp.build()
+door = bp.build()
 
-cq.exporters.export(blast_door,'stl/splitDoor.stl')
+cq.exporters.export(door,'stl/splitDoor.stl')
