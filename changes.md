@@ -1,9 +1,14 @@
 ## Main wip
+
+## 1.1.3
 * Added Split Door
 * Increased magnet height from 1.7 to 2.1
 * Added catwalk generator.
 * Fixed roof magnet cuts.
 * Attempt to fix bunker floor placement.
+* Updated dependencies
+  * cadqueryhelper went to 0.1.1
+  * cqterrain went to 0.1.5
 
 ## 1.1.2
 * Jamie Broke the __init__.py at the root directory of cqterrain
