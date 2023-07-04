@@ -11,7 +11,13 @@ def init_floor_cut(self):
     self.floor_cuts = None
 
 def make_floor_cuts(self):
-    height = self.wall_width + self.base_height + self.floor_tile_height
+
+    if self.floor_thickness:
+        floor_thickness = self.floor_thickness
+    else:
+        floor_thickness = self.wall_width
+
+    height = floor_thickness + self.base_height + self.floor_tile_height
     z_translate = (-1*(self.height/2)) - self.base_height + (height/2) #+ (self.floor_tile_height/2)
 
     floor_cut = (

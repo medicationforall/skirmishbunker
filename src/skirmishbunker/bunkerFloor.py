@@ -21,6 +21,11 @@ def make_interior_floor(self):
     int_length = self.int_length-self.floor_padding
     int_width = self.int_width-self.floor_padding
 
+    if self.floor_thickness:
+        floor_thickness = self.floor_thickness
+    else:
+        floor_thickness = self.wall_width
+
     if self.custom_floor_tile:
         floor_tile = self.custom_floor_tile(self)
     else:
@@ -29,7 +34,7 @@ def make_interior_floor(self):
     columns = math_floor(int_width/(tile_size + tile_padding))
     rows = math_floor(int_length/(tile_size + tile_padding))
     tile_grid = grid.make_grid(part=floor_tile, dim = [tile_size + tile_padding, tile_size + tile_padding], columns = columns, rows = rows)
-    z_tile_translate = -1*(self.height/2-self.floor_tile_height/2-self.wall_width)
+    z_tile_translate = -1 * (self.height / 2 - self.floor_tile_height / 2 - floor_thickness)
 
     #print('z_tile_translate',z_tile_translate)
     self.interior_tiles = tile_grid.translate((0,0,z_tile_translate))
