@@ -15,8 +15,10 @@ bp.panel_padding = 4
 bp.render_windows=True
 bp.skip_windows = []
 bp.window_length = 15
+bp.window_width = 32
+bp.window_width_offset = -1
+bp.window_translate = 3
 bp.window_height = 8
-#bp.window_width =
 bp.window_frame_chamfer = 1.6
 bp.window_frame_chamfer_select = "<Z"
 
@@ -31,9 +33,8 @@ bp.render_roof=False
 
 
 bp.make()
-rec = bp.build_plate()
+rec = bp.build_body()
 
 #show_object(rec)
-
 
 cq.exporters.export(rec,'stl/bunker4_large_inset.stl')

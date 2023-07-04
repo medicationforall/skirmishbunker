@@ -1,5 +1,8 @@
 ## Main wip
+
+## 1.1.4
 * Updated The License
+* Added window width as parameter which can override inset.
 
 ## 1.1.3
 * Added Split Door

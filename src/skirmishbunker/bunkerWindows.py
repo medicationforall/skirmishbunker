@@ -5,6 +5,7 @@ def init_window_params(self):
     self.render_windows=True
     self.window_width_offset = -2
     self.window_length = 15
+    self.window_width = None
     self.window_height = 20
     self.window_length_padding = 0
 
@@ -61,6 +62,10 @@ def make_windows(self):
         window_width= -1*self.inset
     elif self.inset == 0:
         window_width = self.wall_width+2
+
+    # inset override
+    if self.window_width:
+        window_width = self.window_width
 
     if self.custom_cut_window:
         frame = self.custom_window(self)
