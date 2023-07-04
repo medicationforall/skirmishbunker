@@ -7,7 +7,7 @@ def init_body_params(self):
     self.int_length = None
     self.int_width = None
     self.base_height = 3
-    self.floor_thickness = 3
+    self.floor_thickness = None
 
     self.angle = 0
     self.inset = 10
@@ -29,6 +29,11 @@ def make_wedge(self):
 def make_interior_rectangle(self):
     self.int_length = self.length - (2*(self.inset+self.wall_width))
     self.int_width = self.width - (2*(self.inset+self.wall_width))
+   
+    if self.floor_thickness:
+        floor_thickness = self.floor_thickness
+    else:
+        floor_thickness = self.wall_width
 
     if self.inset < 0:
         self.int_length = self.length - (2*(self.wall_width))
@@ -36,8 +41,8 @@ def make_interior_rectangle(self):
 
     self.interior_rectangle = (
         cq.Workplane("XY")
-        .box(self.int_length, self.int_width, self.height)
-        .translate((0, 0, self.floor_thickness))
+        .box(self.int_length, self.int_width, self.height - floor_thickness)
+        .translate((0, 0, floor_thickness / 2))
     )
 
 def make_base(self):
