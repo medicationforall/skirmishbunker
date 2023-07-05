@@ -22,7 +22,12 @@ def make_cut_doors(self):
     height = self.height
     door_cut_width = self.inset+self.wall_width
 
-    if self.inset<0:
+    if self.floor_thickness:
+        floor_thickness = self.floor_thickness
+    else:
+        floor_thickness = self.wall_width
+
+    if self.inset < 0:
         door_cut_width = -1*(self.inset)+self.wall_width
 
     if self.custom_cut_door:
@@ -32,8 +37,13 @@ def make_cut_doors(self):
             cq.Workplane("XY")
             .box(self.door_length, door_cut_width, self.door_height)
             .edges("|Y").fillet(self.door_fillet)
-            .translate((0,0,-1*(height/2 - self.door_height/2)+self.wall_width))
+            .translate((
+                0,
+                0,
+                -1 * (height / 2 - self.door_height / 2) + floor_thickness
+            ))
         )
+
 
     self.cut_doors = self.make_series(
         cut_door,
@@ -46,6 +56,11 @@ def make_cut_doors(self):
 def make_doors(self):
     height = self.height
 
+    if self.floor_thickness:
+        floor_thickness = self.floor_thickness
+    else:
+        floor_thickness = self.wall_width
+
     if self.custom_door:
         door = self.custom_door(self)
     else:
@@ -53,8 +68,13 @@ def make_doors(self):
         bp.length = self.door_length
         bp.width = self.door_width
         bp.height = self.door_height
+        bp.fillet = self.door_fillet
         bp.make()
-        door = bp.build().translate((0,0,-1*(height/2 - self.door_height/2)+self.wall_width))
+        door = bp.build().translate((
+            0,
+            0,
+            -1 * (height / 2 - self.door_height / 2) + floor_thickness
+        ))
 
     x_translate = self.int_length/2+self.door_width
     y_translate = self.int_width/2+self.door_width
