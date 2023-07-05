@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skirmishbunker"
-version = "1.1.4"
+version = "1.2.0"
 authors = [
   { name="James Adams", email="inklink28@gmail.com" }
 ]

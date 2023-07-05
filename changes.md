@@ -1,5 +1,9 @@
 ## Main wip
 
+## 1.2.0
+* New parameter floor_thickness
+  * Allows better granular control of the inner dimensions of the bunker.
+
 ## 1.1.4
 * Updated The License
 * Added window width as parameter which can override inset.
