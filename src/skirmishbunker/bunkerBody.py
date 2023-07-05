@@ -8,6 +8,7 @@ def init_body_params(self):
     self.int_width = None
     self.base_height = 3
     self.floor_thickness = None
+    self.corner_chamfer = 0
 
     self.angle = 0
     self.inset = 10
@@ -22,14 +23,24 @@ def init_body_params(self):
 def make_wedge(self):
     self.wedge = (
         cq.Workplane("XY" )
-        .wedge(self.length,self.height,self.width,self.inset,self.inset,self.length-self.inset,self.width-self.inset)
-        .rotate((1,0,0),(0,0,0),-90)
+        .wedge(
+            self.length,
+            self.height,
+            self.width,
+            self.inset,
+            self.inset,
+            self.length - self.inset,
+            self.width - self.inset
+        ).rotate((1,0,0),(0,0,0),-90)
     )
+
+    if self.corner_chamfer > 0:
+        self.wedge = self.wedge.edges("(not >Z) and (not <Z)").chamfer(self.corner_chamfer)
 
 def make_interior_rectangle(self):
     self.int_length = self.length - (2*(self.inset+self.wall_width))
     self.int_width = self.width - (2*(self.inset+self.wall_width))
-   
+
     if self.floor_thickness:
         floor_thickness = self.floor_thickness
     else:
@@ -49,5 +60,12 @@ def make_base(self):
     self.base = (
         cq.Workplane("XY")
         .box(self.length, self.width, self.base_height)
-        .translate((0,0,-1*((self.height/2)+(self.base_height/2))))
+        .translate((
+            0,
+            0,
+            -1 * ((self.height / 2) + (self.base_height / 2))
+        ))
     )
+
+    if self.corner_chamfer > 0:
+        self.base = self.base.edges("(not >Z) and (not <Z)").chamfer(self.corner_chamfer)
