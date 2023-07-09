@@ -179,11 +179,12 @@ class FlatRoof(Base):
             rows = rows
         )
 
-        # Not entirely sure why -1 works here...
+        base_z_translate = (self.height / 2 + self.tile_height / 2)
+
         if cut_tiles == True:
-            z_translate = self.tile_z_offset + self.height
+            z_translate = self.height - base_z_translate
         else:
-            z_translate = self.height + self.tile_z_offset
+            z_translate = base_z_translate
 
         self.tiles = tile_grid.translate((0, 0, z_translate))
 
