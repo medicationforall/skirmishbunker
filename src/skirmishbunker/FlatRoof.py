@@ -29,14 +29,21 @@ class FlatRoof(Base):
         # less then -1 results in a cut
         self.tile_z_offset = -1
 
+        # Pip/Magnet holes
+        self.cut_holes = False
+        self.hole_inset = 1.5
+        self.hole_depth = 1
+        self.hole_diameter = 2
+
         #shapes
         self.roof_body = None
-        self.roof_tiles = None
+        self.tiles = None
+        self.holes = None
 
     def should_cut_tiles(self):
         if self.tile_z_offset < -1:
             return True
-        
+
         return False
 
     def calc_final_length(self):
@@ -178,7 +185,29 @@ class FlatRoof(Base):
         else:
             z_translate = self.height + self.tile_z_offset
 
-        self.roof_tiles = tile_grid.translate((0, 0, z_translate))
+        self.tiles = tile_grid.translate((0, 0, z_translate))
+
+    def make_hole_cuts(self):
+        length = self.calc_final_length()
+        width = self.calc_final_width()
+        radius = self.hole_diameter / 2
+        height = self.hole_depth
+        inset = self.hole_inset
+
+        hole = cq.Workplane("XY").cylinder(height, radius)
+
+        x_translate = (length / 2) - radius - inset
+        y_translate = (width / 2) - radius - inset
+        z_translate = -1 * (self.height / 2 - height / 2)
+
+        holes = (
+            cq.Workplane("XY")
+            .union(hole.translate((x_translate, y_translate, z_translate)))
+            .union(hole.translate((-1 * x_translate, y_translate, z_translate)))
+            .union(hole.translate((-1 * x_translate, -1 * y_translate, z_translate)))
+            .union(hole.translate((x_translate, -1 * y_translate, z_translate)))
+        )
+        self.holes = holes
 
     def make(self):
         super().make()
@@ -191,6 +220,9 @@ class FlatRoof(Base):
         if self.render_tiles:
             self.make_tiles()
 
+        if self.cut_holes:
+            self.make_hole_cuts()
+
     def build(self):
         super().build()
         tiles = self.render_tiles
@@ -201,9 +233,12 @@ class FlatRoof(Base):
             .union(self.roof_body)
         )
 
-        if tiles and self.roof_tiles and cut_tiles == True:
-            result = result.cut(self.roof_tiles)
-        elif tiles and self.roof_tiles:
-            result = result.add(self.roof_tiles)
+        if self.cut_holes and self.holes:
+            result = result.cut(self.holes)
+
+        if tiles and self.tiles and cut_tiles == True:
+            result = result.cut(self.tiles)
+        elif tiles and self.tiles:
+            result = result.add(self.tiles)
 
         return result
