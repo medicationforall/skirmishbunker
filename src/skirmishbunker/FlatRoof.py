@@ -1,5 +1,6 @@
 import cadquery as cq
-from skirmishbunker import Base
+from . import Base, Hatch
+from .SeriesHelper import SeriesHelper
 from cadqueryhelper import series, grid
 from math import floor as math_floor
 
@@ -7,13 +8,16 @@ class FlatRoof(Base):
     def __init__(self):
         super().__init__()
 
-        #parameters
+        # base parameters
         self.length = 160
         self.width = 150
         self.height = 25
 
         self.inset = 0
         self.wall_width = 0
+
+        self.panel_length = 0
+        self.panel_padding = 0
 
         # select all edges on the positive z face
         self.roof_chamfer_faces_selector = "+Z"
@@ -23,11 +27,19 @@ class FlatRoof(Base):
 
         # roof tiles
         self.render_tiles = False
-        self.tile_size = 18
-        self.tile_padding = 1
-        self.tile_height = 1
+        self.tile_size = 21
+        self.tile_padding = 2
+        self.tile_height = 1.5
         # less then -1 results in a cut
         self.tile_z_offset = -1
+
+        # Hatches
+        self.hatch_panels = []
+        self.hatch_length = 25
+        self.hatch_width = 25
+        self.hatch_radius = 10.5
+        self.hatch_height = 6
+        self.hatch_z_translate = 0
 
         # Pip/Magnet holes
         self.cut_holes = False
@@ -38,6 +50,7 @@ class FlatRoof(Base):
         #shapes
         self.roof_body = None
         self.tiles = None
+        self.hatches = None
         self.holes = None
 
     def should_cut_tiles(self):
@@ -53,10 +66,16 @@ class FlatRoof(Base):
         return self.width - (self.inset * 2)
 
     def calc_final_int_length(self):
-        return self.length - (2 * (self.inset + self.wall_width))
+        length = self.length
+        length -= 2 * (self.inset + self.wall_width)
+        length -= 2 * self.roof_chamfer
+        return length
 
     def calc_final_int_width(self):
-        return self.width - (2 * (self.inset + self.wall_width))
+        width = self.width
+        width -= 2 * (self.inset + self.wall_width)
+        width -= 2* self.roof_chamfer
+        return width
 
     def calc_tile_space(self):
         return self.tile_size + self.tile_padding
@@ -188,6 +207,36 @@ class FlatRoof(Base):
 
         self.tiles = tile_grid.translate((0, 0, z_translate))
 
+    def make_hatches(self):
+        int_length = self.calc_final_int_length() 
+        int_width = self.calc_final_int_width()
+        z_translate = (self.height / 2 + self.hatch_height / 2)
+
+        bp = Hatch()
+        bp.length = self.hatch_length
+        bp.width = self.hatch_width
+        bp.height = self.hatch_height
+        bp.hatch_radius = self.hatch_radius
+        bp.make()
+
+        hatch = bp.build()
+        length_offset = self.panel_length - bp.length + self.panel_padding * 2
+
+        series = SeriesHelper()
+        series.shape = hatch
+        series.outer_length = int_length
+        series.outer_width = int_width
+        series.length_offset = length_offset
+        series.comp_length = self.panel_length
+        series.comp_padding = self.panel_padding
+        series.x_translate = (int_length / 2) - (bp.width / 2)
+        series.y_translate = (int_width / 2) - (bp.width / 2)
+        series.z_translate = z_translate
+        series.keep_list = self.hatch_panels
+        series.make()
+
+        self.hatches = series.get_scene()
+
     def make_hole_cuts(self):
         length = self.calc_final_length()
         width = self.calc_final_width()
@@ -221,6 +270,9 @@ class FlatRoof(Base):
         if self.render_tiles:
             self.make_tiles()
 
+        if len(self.hatch_panels) > 0:
+            self.make_hatches()
+
         if self.cut_holes:
             self.make_hole_cuts()
 
@@ -236,6 +288,9 @@ class FlatRoof(Base):
 
         if self.cut_holes and self.holes:
             result = result.cut(self.holes)
+        
+        if self.hatches:
+            result = result.add(self.hatches)
 
         if tiles and self.tiles and cut_tiles == True:
             result = result.cut(self.tiles)
