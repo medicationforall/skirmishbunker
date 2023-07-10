@@ -6,3 +6,4 @@ from .Roof import Roof
 from .Hatch import Hatch
 from .Catwalk import Catwalk
 from .FlatRoof import FlatRoof
+from .SeriesHelper import SeriesHelper
