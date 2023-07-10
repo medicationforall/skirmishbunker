@@ -1,5 +1,6 @@
 import cadquery as cq
-from . import Base, Hatch
+from . import Base
+from .Hatch import Hatch
 from .SeriesHelper import SeriesHelper
 from cadqueryhelper import series, grid
 from math import floor as math_floor
@@ -22,7 +23,7 @@ class FlatRoof(Base):
         # select all edges on the positive z face
         self.roof_chamfer_faces_selector = "+Z"
         self.roof_chamfer_edges_selector = ""
-        self.roof_chamfer = 10
+        self.roof_chamfer = 0
         self.roof_operation = "chamfer" # chamfer, fillet
 
         # roof tiles
@@ -262,9 +263,6 @@ class FlatRoof(Base):
     def make(self):
         super().make()
 
-        self.inner_length = self.length - self.roof_chamfer * 2
-        self.inner_width = self.width - self.roof_chamfer * 2
-
         self.__make_roof_body()
 
         if self.render_tiles:
@@ -278,6 +276,7 @@ class FlatRoof(Base):
 
     def build(self):
         super().build()
+
         tiles = self.render_tiles
         cut_tiles = self.should_cut_tiles()
 
