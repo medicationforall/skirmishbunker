@@ -22,6 +22,8 @@ class SeriesHelper:
         self.skip_list = []
         self.keep_list = []
 
+        self.scene = None
+
     def __validate(self):
         if (self.shape == None):
             raise Exception('No shape set')
@@ -32,7 +34,13 @@ class SeriesHelper:
         if (self.comp_padding + self.comp_length <= 0):
             raise Exception('Component sizes need to be set')
 
-    def make_series(self):
+    def get_scene(self):
+        if (self.scene == None):
+            raise Exception('You must ')
+        
+        return self.scene
+
+    def make(self):
         self.__validate()
 
         shape = self.shape
@@ -99,4 +107,4 @@ class SeriesHelper:
                 if index in self.keep_list:
                     scene.add(solid)
 
-        return scene
+        self.scene = scene
