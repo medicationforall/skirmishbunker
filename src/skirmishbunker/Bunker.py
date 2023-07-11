@@ -16,6 +16,7 @@ from . import Base
 import cadquery as cq
 from cadqueryhelper import series
 from cqterrain import roof, tile, Ladder
+from .FlatRoof import FlatRoof
 from .SeriesHelper import SeriesHelper
 from math import floor as math_floor
 
@@ -59,6 +60,12 @@ class Bunker(Base):
         series.make()
 
         return series.get_scene()
+
+    def set_roof_object(self, roof):
+        if not isinstance(roof, FlatRoof):
+            raise Exception("Invalid roof type")
+
+        self.roof_object = roof
 
     def make(self):
         super().make()
@@ -148,7 +155,6 @@ class Bunker(Base):
         self.roof = self.roof_bp.build().translate((0, 0, z_translate))
 
         if self.roof_x_translate != None and self.roof_z_translate:
-            print('build plate translate')
             self.roof = self.roof.translate((self.roof_x_translate,0,self.roof_z_translate))
 
         return self.roof
@@ -165,9 +171,9 @@ class Bunker(Base):
         x_translate = self.length
 
         if self.inset < 0:
-            x_translate = self.length+(-1*(self.inset*2))
+            x_translate = self.length + ( -1 * (self.inset))
         if self.inset == 0:
-            x_translate = self.length+15
+            x_translate = self.length + 15
 
         if self.render_roof and self.roof_bp:
             self.roof_x_translate = x_translate
