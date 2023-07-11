@@ -75,12 +75,29 @@ class FlatRoof(Base):
     def calc_final_int_width(self):
         width = self.width
         width -= 2 * (self.inset + self.wall_width)
-        width -= 2* self.roof_chamfer
+        width -= 2 * self.roof_chamfer
         return width
 
     def calc_tile_space(self):
         return self.tile_size + self.tile_padding
-    
+
+    def calc_tile_z_translate(self):
+        cut_tiles = self.should_cut_tiles()
+        translate = (self.height / 2 + self.tile_height / 2)
+
+        if cut_tiles == True:
+            translate = self.height - translate
+        else:
+            translate = translate
+        
+        return translate
+
+    def calc_hatch_length_offset(self):
+        return self.panel_length - self.hatch_length + self.panel_padding * 2
+
+    def calc_hatch_z_translate(self):
+        return (self.height / 2 + self.hatch_height / 2)
+
     # Calculate how far the default
     # slot translation will be (This is ~85% of
     # the tile size)
@@ -102,7 +119,7 @@ class FlatRoof(Base):
     def calc_slot_length_sm(self):
         return self.tile_size - (self.tile_size * 0.666)
 
-    def __make_roof_body(self):
+    def make_roof_body(self):
         roof_body = cq.Workplane("XY").box(
             self.calc_final_length(),
             self.calc_final_width(),
@@ -141,7 +158,6 @@ class FlatRoof(Base):
         int_length = self.calc_final_int_length()
         int_width = self.calc_final_int_width()
         tile_space = self.calc_tile_space()
-        cut_tiles = self.should_cut_tiles()
         slot_translate = self.calc_slot_translation()
         slot_radius = self.calc_slot_radius()
         slot_length_md = self.calc_slot_length_md()
@@ -199,19 +215,13 @@ class FlatRoof(Base):
             rows = rows
         )
 
-        base_z_translate = (self.height / 2 + self.tile_height / 2)
-
-        if cut_tiles == True:
-            z_translate = self.height - base_z_translate
-        else:
-            z_translate = base_z_translate
-
-        self.tiles = tile_grid.translate((0, 0, z_translate))
+        self.tiles = tile_grid.translate((0, 0, self.calc_tile_z_translate()))
 
     def make_hatches(self):
         int_length = self.calc_final_int_length() 
+        length_offset = self.calc_hatch_length_offset()
         int_width = self.calc_final_int_width()
-        z_translate = (self.height / 2 + self.hatch_height / 2)
+        z_translate = self.calc_hatch_z_translate()
 
         bp = Hatch()
         bp.length = self.hatch_length
@@ -221,7 +231,6 @@ class FlatRoof(Base):
         bp.make()
 
         hatch = bp.build()
-        length_offset = self.panel_length - bp.length + self.panel_padding * 2
 
         series = SeriesHelper()
         series.shape = hatch
@@ -263,7 +272,7 @@ class FlatRoof(Base):
     def make(self):
         super().make()
 
-        self.__make_roof_body()
+        self.make_roof_body()
 
         if self.render_tiles:
             self.make_tiles()
