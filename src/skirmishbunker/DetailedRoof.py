@@ -8,8 +8,8 @@ class DetailedRoof(FlatRoof):
     def __init__(self):
         super().__init__()
 
-        self.bunker_int_length=None
-        self.bunker_int_width=None
+        self.bunker_int_length = None
+        self.bunker_int_width = None
         self.angle = 0
 
         self.wall_details_inset = 3
@@ -22,25 +22,46 @@ class DetailedRoof(FlatRoof):
         self.roof_overflow = 0
 
         self.outline = None
-        self.roof_body = None
         self.cut_walls = None
         self.wall_details = None
-        self.roof_tiles = None
-        self.cut_hatches = None
-        self.hatches = None
-        self.cut_pips = None
-
-    def calc_tile_space_length(self):
-        return self.calc_final_int_length()
-
-    def calc_tile_space_width(self):
-        return self.calc_final_int_width()
 
     def calc_tile_z_translate(self):
         return -1 * ((self.height / 2) - self.wall_width - 1)
 
+    def calc_hatch_space_length(self):
+        length = self.length
+        length -= 2 * (self.inset + self.wall_width)
+        length -= 2 * self.roof_chamfer
+        return length
+
+    def calc_hatch_space_width(self):
+        width = self.width
+        width -= 2 * (self.inset + self.wall_width)
+        width -= 2 * self.roof_chamfer
+        return width
+
     def calc_hatch_z_translate(self):
         return -1 * (self.height / 2) + self.hatch_height / 2 + self.wall_width
+
+    def calc_hole_x_translate(self):
+        if self.inset <= 0:
+            translate = (self.length / 2)
+        else:
+            translate = ((self.length - (self.inset * 2)) / 2)
+
+        translate -= (self.hole_diameter / 2)
+        translate -= self.hole_inset
+        return translate
+
+    def calc_hole_y_translate(self):
+        if self.inset <= 0:
+            translate = (self.width / 2)
+        else:
+            translate = ((self.width - (self.inset * 2)) / 2)
+
+        translate -= (self.hole_diameter / 2)
+        translate -= self.hole_inset
+        return translate
 
     def make_roof_body(self):
         self.outline = (cq.Workplane("XY" )
