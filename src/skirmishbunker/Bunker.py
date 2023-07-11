@@ -155,13 +155,19 @@ class Bunker(Base):
         self.roof = self.roof_bp.build().translate((0, 0, z_translate))
 
         if self.roof_x_translate != None and self.roof_z_translate:
-            self.roof = self.roof.translate((self.roof_x_translate,0,self.roof_z_translate))
+            self.roof = self.roof.translate((
+                self.roof_x_translate,
+                0,
+                self.roof_z_translate
+            ))
 
         return self.roof
 
     def build(self):
         super().build()
+
         scene = self.build_body()
+
         if self.render_roof and self.roof_bp:
             scene.add(self.build_roof(z_translate = self.height/2+self.roof_bp.height/2))
 
@@ -171,12 +177,12 @@ class Bunker(Base):
         x_translate = self.length
 
         if self.inset < 0:
-            x_translate = self.length + ( -1 * (self.inset))
+            x_translate = self.length + (-1 * (self.inset * 2))
         if self.inset == 0:
             x_translate = self.length + 15
 
         if self.render_roof and self.roof_bp:
             self.roof_x_translate = x_translate
-            self.roof_z_translate = -1*(self.height+self.base_height)
+            self.roof_z_translate = -1 * (self.height + self.base_height)
 
         return self.build()

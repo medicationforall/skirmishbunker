@@ -33,8 +33,8 @@ def init_roof_params(self):
     self.roof_bp = None
 
 def make_roof(self):
-    length = self.length-(2*(self.inset-self.roof_overflow))
-    width = self.width-(2*(self.inset-self.roof_overflow))
+    length = self.length - (2 * (self.inset - self.roof_overflow))
+    width = self.width - (2 * (self.inset - self.roof_overflow))
 
     bp = self.roof_object
     bp.height = self.roof_height
@@ -57,11 +57,11 @@ def make_roof(self):
     bp.tile_padding = self.roof_tile_padding
     bp.tile_height = self.roof_tile_height
 
+    bp.hatch_panels = self.ladder_panels
     bp.hatch_length = self.roof_hatch_length
     bp.hatch_width = self.roof_hatch_width
     bp.hatch_radius = self.roof_hatch_radius
     bp.hatch_height = self.roof_hatch_height
-    bp.hatch_panels = self.ladder_panels
 
     bp.panel_length = self.panel_length
     bp.panel_padding = self.panel_padding
@@ -72,7 +72,7 @@ def make_roof(self):
         bp.cut_holes = False
 
     bp.hole_diameter = (self.pip_radius * 2) * self.roof_pip_hole_mod
-    bp.hole_depth = self.pip_height
+    bp.hole_depth = self.pip_height * self.roof_pip_hole_mod
     bp.hole_inset = self.pip_padding
 
     bp.roof_overflow = self.roof_overflow
