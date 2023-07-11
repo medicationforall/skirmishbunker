@@ -30,6 +30,12 @@ class DetailedRoof(FlatRoof):
         self.hatches = None
         self.cut_pips = None
 
+    def calc_tile_space_length(self):
+        return self.calc_final_int_length()
+
+    def calc_tile_space_width(self):
+        return self.calc_final_int_width()
+
     def calc_tile_z_translate(self):
         return -1 * ((self.height / 2) - self.wall_width - 1)
 

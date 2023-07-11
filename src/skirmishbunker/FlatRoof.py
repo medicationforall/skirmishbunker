@@ -77,8 +77,20 @@ class FlatRoof(Base):
         width -= 2 * (self.inset + self.wall_width)
         width -= 2 * self.roof_chamfer
         return width
+    
+    def calc_tile_space_length(self):
+        length = self.length
+        length -= 2 * self.inset
+        length -= 2 * self.roof_chamfer
+        return length
 
-    def calc_tile_space(self):
+    def calc_tile_space_width(self):
+        width = self.width
+        width -= 2 * self.inset
+        width -= 2 * self.roof_chamfer
+        return width
+
+    def calc_tile_spacing(self):
         return self.tile_size + self.tile_padding
 
     def calc_tile_z_translate(self):
@@ -97,6 +109,21 @@ class FlatRoof(Base):
 
     def calc_hatch_z_translate(self):
         return (self.height / 2 + self.hatch_height / 2)
+
+    def calc_hole_x_translate(self):
+        translate = (self.calc_final_length() / 2)
+        translate -= (self.hole_diameter / 2)
+        translate -= self.hole_inset
+        return translate
+
+    def calc_hole_y_translate(self):
+        translate = (self.calc_final_width() / 2)
+        translate -= (self.hole_diameter / 2)
+        translate -= self.hole_inset
+        return translate
+
+    def calc_hole_z_translate(self):
+        return -1 * (self.height / 2 - self.hole_depth / 2)
 
     # Calculate how far the default
     # slot translation will be (This is ~85% of
@@ -155,9 +182,9 @@ class FlatRoof(Base):
         self.roof_body = roof_body
 
     def make_tiles(self):
-        int_length = self.calc_final_int_length()
-        int_width = self.calc_final_int_width()
-        tile_space = self.calc_tile_space()
+        length = self.calc_tile_space_length()
+        width = self.calc_tile_space_width()
+        tile_space = self.calc_tile_spacing()
         slot_translate = self.calc_slot_translation()
         slot_radius = self.calc_slot_radius()
         slot_length_md = self.calc_slot_length_md()
@@ -206,8 +233,8 @@ class FlatRoof(Base):
                 .cut(slot4)
                 .cut(slot5))
 
-        columns = math_floor(int_width / (tile_space))
-        rows = math_floor(int_length / (tile_space))
+        columns = math_floor(width / (tile_space))
+        rows = math_floor(length / (tile_space))
         tile_grid = grid.make_grid(
             part = tile,
             dim = [tile_space, tile_space],
@@ -230,6 +257,10 @@ class FlatRoof(Base):
         bp.hatch_radius = self.hatch_radius
         bp.make()
 
+        print(bp.length)
+        print(bp.width)
+        print(bp.height)
+
         hatch = bp.build()
 
         series = SeriesHelper()
@@ -248,17 +279,14 @@ class FlatRoof(Base):
         self.hatches = series.get_scene()
 
     def make_hole_cuts(self):
-        length = self.calc_final_length()
-        width = self.calc_final_width()
-        radius = self.hole_diameter / 2
-        height = self.hole_depth
-        inset = self.hole_inset
+        x_translate = self.calc_hole_x_translate()
+        y_translate = self.calc_hole_y_translate()
+        z_translate = self.calc_hole_z_translate()
 
-        hole = cq.Workplane("XY").cylinder(height, radius)
-
-        x_translate = (length / 2) - radius - inset
-        y_translate = (width / 2) - radius - inset
-        z_translate = -1 * (self.height / 2 - height / 2)
+        hole = cq.Workplane("XY").cylinder(
+            self.hole_diameter / 2,
+            self.hole_depth
+        )
 
         holes = (
             cq.Workplane("XY")
@@ -267,6 +295,7 @@ class FlatRoof(Base):
             .union(hole.translate((-1 * x_translate, -1 * y_translate, z_translate)))
             .union(hole.translate((x_translate, -1 * y_translate, z_translate)))
         )
+
         self.holes = holes
 
     def make(self):
@@ -296,7 +325,7 @@ class FlatRoof(Base):
 
         if self.cut_holes and self.holes:
             result = result.cut(self.holes)
-        
+
         if self.hatches:
             result = result.add(self.hatches)
 
