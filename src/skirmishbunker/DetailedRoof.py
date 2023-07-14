@@ -14,7 +14,7 @@
 
 import cadquery as cq
 from .FlatRoof import FlatRoof
-from cadqueryhelper import series
+from cadqueryhelper import series, grid
 from cqterrain import roof
 from math import floor as math_floor
 
@@ -25,13 +25,11 @@ class DetailedRoof(FlatRoof):
         self.bunker_int_length = None
         self.bunker_int_width = None
         self.angle = 0
+        self.tile_height = 2
 
         self.wall_details_inset = 3
         self.wall_details_depth = 5
         self.wall_arch_fillet = 2
-
-        self.hatch_cut_inset = 2
-        self.hatch_cut_chamfer = 2
 
         self.roof_overflow = 0
 
@@ -39,45 +37,47 @@ class DetailedRoof(FlatRoof):
         self.cut_walls = None
         self.wall_details = None
 
-    def calc_tile_z_translate(self):
-        return -1 * ((self.height / 2) - self.wall_width - 1)
 
-    def calc_hatch_space_length(self):
+    def _calc_tile_z_translate(self):
+        # this was hardcoded to -1 that was a bug in my code assuming a tile height of 2
+        return -1 * ((self.height / 2) - self.wall_width - (self.tile_height/2))
+
+    def _calc_hatch_space_length(self):
         length = self.length
         length -= 2 * (self.inset + self.wall_width)
         length -= 2 * self.roof_chamfer
         return length
 
-    def calc_hatch_space_width(self):
+    def _calc_hatch_space_width(self):
         width = self.width
         width -= 2 * (self.inset + self.wall_width)
         width -= 2 * self.roof_chamfer
         return width
 
-    def calc_hatch_z_translate(self):
+    def _calc_hatch_z_translate(self):
         return -1 * (self.height / 2) + self.hatch_height / 2 + self.wall_width
 
-    def calc_hole_x_translate(self):
+    def _calc_hole_x_translate(self):
         if self.inset <= 0:
             translate = (self.length / 2)
         else:
             translate = ((self.length - (self.inset * 2)) / 2)
 
-        translate -= (self.hole_diameter / 2)
+        translate -= (self.hole_radius)
         translate -= self.hole_inset
         return translate
 
-    def calc_hole_y_translate(self):
+    def _calc_hole_y_translate(self):
         if self.inset <= 0:
             translate = (self.width / 2)
         else:
             translate = ((self.width - (self.inset * 2)) / 2)
 
-        translate -= (self.hole_diameter / 2)
+        translate -= (self.hole_radius)
         translate -= self.hole_inset
         return translate
 
-    def make_roof_body(self):
+    def _make_roof_body(self):
         self.outline = (cq.Workplane("XY" )
             .wedge(
                 self.length,
@@ -178,6 +178,30 @@ class DetailedRoof(FlatRoof):
             .add(x_minus)
             .add(y_plus)
             .add(y_minus))
+
+    #@todo discussion point - this is a hack until I can figure out why the FlatRoof tile generator created different results.
+    def _make_tiles(self):
+        tile_size = 21
+        tile_padding = 2
+        tile_height = self.tile_height
+
+        int_length = self.length-(2*(self.inset+self.wall_width))
+        int_width = self.width-(2*(self.inset+self.wall_width))
+
+        tile = cq.Workplane("XY").box(tile_size, tile_size, tile_height)
+        slot = cq.Workplane("XY").slot2D(tile_size,2).extrude(tile_height).rotate((0,0,1),(0,0,0),45)
+        slot2 = cq.Workplane("XY").slot2D(tile_size-7,2).extrude(tile_height).rotate((0,0,1),(0,0,0),45).translate((-3,-3,0))
+        slot3 = cq.Workplane("XY").slot2D(tile_size-7,2).extrude(tile_height).rotate((0,0,1),(0,0,0),45).translate((3,3,0))
+        slot4 = cq.Workplane("XY").slot2D(tile_size-7-7,2).extrude(tile_height).rotate((0,0,1),(0,0,0),45).translate((-3-3,-3-3,0))
+        slot5 = cq.Workplane("XY").slot2D(tile_size-7-7,2).extrude(tile_height).rotate((0,0,1),(0,0,0),45).translate((3+3,3+3,0))
+
+        tile = tile.cut(slot).cut(slot2).cut(slot3).cut(slot4).cut(slot5)
+
+        columns = math_floor(int_width/(tile_size + tile_padding))
+        rows = math_floor(int_length/(tile_size + tile_padding))
+        tile_grid = grid.make_grid(part=tile, dim = [tile_size + tile_padding, tile_size + tile_padding], columns = columns, rows = rows)
+
+        self.tiles = tile_grid.translate((0,0,self._calc_tile_z_translate()))
 
     def make(self):
         super().make()

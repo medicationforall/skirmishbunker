@@ -50,6 +50,4 @@ def make_interior_floor(self):
     tile_grid = grid.make_grid(part=floor_tile, dim = [tile_size + tile_padding, tile_size + tile_padding], columns = columns, rows = rows)
     z_tile_translate = -1 * (self.height / 2 - self.floor_tile_height / 2 - floor_thickness)
 
-    #print('z_tile_translate',z_tile_translate)
     self.interior_tiles = tile_grid.translate((0,0,z_tile_translate))
-    #self.interior_tiles = tile_grid

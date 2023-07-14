@@ -1,6 +1,4 @@
 ## Main wip
-* Added Apache 2 license to top of source files.
-
 ### Contributed By Morven Lewis-Everley
 * Updated flat roof to use hatches and tiles.
 * Migrate Roof to Detailed roof, make it inherit from FlatRoof and refactor how tiles, hatches and magnet holes are generated.
@@ -8,6 +6,19 @@
 * Added basic dependency injection for swapping out roof type on the fly.
 * Added the ability to customise the hatches when generating the roof and the bunker together.
 * Added an example of swapping out the roof.
+
+### Cleanup
+* Added Apache 2 license to top of source files.
+* Restored cut hatch code.
+* Restored tile generation code for detailed roof.
+  * this was due to a regression bug.
+  * temp hack for now
+* Fix parameter order when making pip / magnet holes in the roof.
+* Make Calc methods protected
+* Brought back the render_hatches flag
+* Added the render_hatch_cuts flag
+* FlatRoof changed hole_diameter to hole_radius
+
 
 ## 1.2.0
 * New parameter floor_thickness
