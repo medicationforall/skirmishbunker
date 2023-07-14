@@ -1,4 +1,6 @@
 ## Main wip
+
+## 2.0.0
 ### Contributed By Morven Lewis-Everley
 * Updated flat roof to use hatches and tiles.
 * Migrate Roof to Detailed roof, make it inherit from FlatRoof and refactor how tiles, hatches and magnet holes are generated.
@@ -18,6 +20,8 @@
 * Brought back the render_hatches flag
 * Added the render_hatch_cuts flag
 * FlatRoof changed hole_diameter to hole_radius
+* Added Bunker 5 example.
+* Added Bunker 6 example.
 
 
 ## 1.2.0
