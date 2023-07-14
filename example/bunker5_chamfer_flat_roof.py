@@ -18,6 +18,6 @@ bp.make()
 #bunker = bp.build_plate()
 bunker = bp.build()
 
-show_object(bunker)
+#show_object(bunker)
 
 cq.exporters.export(bunker,'stl/bunker5_chamfer_flat_roof.stl')
