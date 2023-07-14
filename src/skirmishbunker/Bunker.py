@@ -16,6 +16,8 @@ from . import Base
 import cadquery as cq
 from cadqueryhelper import series
 from cqterrain import roof, tile, Ladder
+from .FlatRoof import FlatRoof
+from .SeriesHelper import SeriesHelper
 from math import floor as math_floor
 
 from .bunkerBody import init_body_params, make_wedge, make_interior_rectangle, make_base
@@ -42,60 +44,28 @@ class Bunker(Base):
         init_floor_cut(self)
         init_pip_params(self)
 
-    def make_series(self, shape, length_offset, x_translate=0, y_translate=0, z_translate=0, skip_list=None, keep_list=None):
-        length = self.int_length
-        width = self.int_width
-        padding = self.panel_padding
-        p_width = self.panel_width
+    def make_series(self, shape, length_offset, x_translate = 0, y_translate = 0, z_translate = 0, skip_list = None, keep_list = None):
+        series = SeriesHelper()
+        series.shape = shape
+        series.outer_length = self.int_length
+        series.outer_width = self.int_width
+        series.length_offset = length_offset
+        series.comp_length = self.panel_length
+        series.comp_padding = self.panel_padding
+        series.x_translate = x_translate
+        series.y_translate = y_translate
+        series.z_translate = z_translate
+        series.skip_list = skip_list
+        series.keep_list = keep_list
+        series.make()
 
-        x_panels_size = math_floor(length / (self.panel_length + self.panel_padding))
-        y_panels_size = math_floor(width / (self.panel_length + self.panel_padding))
+        return series.get_scene()
 
-        x_shapes = series(shape, x_panels_size, length_offset=length_offset)
-        y_shapes = series(shape, y_panels_size, length_offset=length_offset)
+    def set_roof_object(self, roof):
+        if not isinstance(roof, FlatRoof):
+            raise Exception("Invalid roof type")
 
-        x_plus = (
-            cq.Workplane("XY").add(x_shapes)
-            .translate((0, y_translate, z_translate))
-        )
-
-        x_minus = (
-            cq.Workplane("XY").add(x_shapes)
-            .rotate((0,0,1),(0,0,0),180)
-            .translate((0, -1*y_translate, z_translate))
-        )
-
-        y_plus = (
-            cq.Workplane("XY").add(y_shapes)
-            .rotate((0,0,1),(0,0,0),90)
-            .translate((x_translate, 0, z_translate))
-        )
-
-        y_minus = (
-            cq.Workplane("XY").add(y_shapes)
-            .rotate((0,0,1),(0,0,0),90)
-            .rotate((0,0,1),(0,0,0),180)
-            .translate((-1*(x_translate), 0, z_translate))
-        )
-
-        scene = x_plus.add(y_plus).add(x_minus).add(y_minus)
-
-        if skip_list and len(skip_list) > 0:
-            solids = scene.solids().vals()
-            scene = cq.Workplane("XY")
-
-            for  index, solid in enumerate(solids):
-                if index not in skip_list:
-                    scene.add(solid)
-        elif keep_list and len(keep_list) > 0:
-            solids = scene.solids().vals()
-            scene = cq.Workplane("XY")
-
-            for  index, solid in enumerate(solids):
-                if index in keep_list:
-                    scene.add(solid)
-
-        return scene
+        self.roof_object = roof
 
     def make(self):
         super().make()
@@ -185,14 +155,19 @@ class Bunker(Base):
         self.roof = self.roof_bp.build().translate((0, 0, z_translate))
 
         if self.roof_x_translate != None and self.roof_z_translate:
-            print('build plate translate')
-            self.roof = self.roof.translate((self.roof_x_translate,0,self.roof_z_translate))
+            self.roof = self.roof.translate((
+                self.roof_x_translate,
+                0,
+                self.roof_z_translate
+            ))
 
         return self.roof
 
     def build(self):
         super().build()
+
         scene = self.build_body()
+
         if self.render_roof and self.roof_bp:
             scene.add(self.build_roof(z_translate = self.height/2+self.roof_bp.height/2))
 
@@ -202,12 +177,12 @@ class Bunker(Base):
         x_translate = self.length
 
         if self.inset < 0:
-            x_translate = self.length+(-1*(self.inset*2))
+            x_translate = self.length + (-1 * (self.inset * 2))
         if self.inset == 0:
-            x_translate = self.length+15
+            x_translate = self.length + 15
 
         if self.render_roof and self.roof_bp:
             self.roof_x_translate = x_translate
-            self.roof_z_translate = -1*(self.height+self.base_height)
+            self.roof_z_translate = -1 * (self.height + self.base_height)
 
         return self.build()
