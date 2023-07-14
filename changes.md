@@ -1,4 +1,5 @@
 ## Main wip
+* Added Apache 2 license to top of source files.
 
 ## 1.2.0
 * New parameter floor_thickness
