@@ -1,4 +1,8 @@
 ## Main wip
+* breaking stuff in the DetailedRoof
+  * re-wrote how wall cuts care calculated
+  * fixed positioning of wall details.
+  * Code is still full of nonense and magic constants
 
 ## 2.0.0
 ### Contributed By Morven Lewis-Everley
