@@ -129,3 +129,6 @@ dmypy.json
 .pyre/
 
 gcode/
+
+# VSCode Config
+.vscode/settings.json

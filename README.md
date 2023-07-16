@@ -58,3 +58,32 @@ To install skirmishbunker directly from GitHub, run the following `pip` command:
 From the cloned skirmishbunker directory run.
 
 	pip install ./
+
+### Install a development version
+
+If you want to work on this library locally you will need the following instaled globally on you computer:
+
+* Python 3
+* setuptools
+* pip
+* virtualenv (venv)
+
+Next you will need to clone this repo (or, ideally, your own fork):
+
+	git clone https://github.com/medicationforall/skirmishbunker
+
+Now, step into the cloned folder and build a Python virtual environment:
+
+	cd /path/to/skirmishbunker
+	python -m venv ./venv
+
+Once this is done, activate the virtual environment and install dependencies:
+
+	source ./venv/bin/activate
+	pip install ./
+
+This will take a little while to run, once finished, you might need to link `skirmishbunker` as an editable library (or your changes will not be seen). Do this as follows:
+
+	pip install -e ./
+
+Now edit away! 

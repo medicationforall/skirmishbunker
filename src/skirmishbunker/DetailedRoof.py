@@ -38,6 +38,18 @@ class DetailedRoof(FlatRoof):
         self.wall_details = None
 
 
+    def _calc_tile_space_length(self):
+        length = self.length
+        length -= 2 * (self.inset + self.wall_width)
+        return length
+
+
+    def _calc_tile_space_width(self):
+        width = self.width
+        width -= 2 * (self.inset + self.wall_width)
+        return width
+
+
     def _calc_tile_z_translate(self):
         # this was hardcoded to -1 that was a bug in my code assuming a tile height of 2
         return -1 * ((self.height / 2) - self.wall_width - (self.tile_height/2))
