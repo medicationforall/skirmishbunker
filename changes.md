@@ -1,5 +1,36 @@
 ## Main wip
 
+## 2.0.1
+* breaking stuff in the DetailedRoof
+  * re-wrote how wall cuts care calculated
+  * fixed positioning of wall details.
+  * Code is still full of nonense and magic constants
+* Cleaned up dependencies
+
+## 2.0.0
+### Contributed By Morven Lewis-Everley
+* Updated flat roof to use hatches and tiles.
+* Migrate Roof to Detailed roof, make it inherit from FlatRoof and refactor how tiles, hatches and magnet holes are generated.
+* Introduce a helper class that assist in generation of a Series of shapes (as all series code seems to be 90% duplication with only a few changes).
+* Added basic dependency injection for swapping out roof type on the fly.
+* Added the ability to customise the hatches when generating the roof and the bunker together.
+* Added an example of swapping out the roof.
+
+### Cleanup
+* Added Apache 2 license to top of source files.
+* Restored cut hatch code.
+* Restored tile generation code for detailed roof.
+  * this was due to a regression bug.
+  * temp hack for now
+* Fix parameter order when making pip / magnet holes in the roof.
+* Make Calc methods protected
+* Brought back the render_hatches flag
+* Added the render_hatch_cuts flag
+* FlatRoof changed hole_diameter to hole_radius
+* Added Bunker 5 example.
+* Added Bunker 6 example.
+
+
 ## 1.2.0
 * New parameter floor_thickness
   * Allows better granular control of the inner dimensions of the bunker.
