@@ -10,7 +10,12 @@ bp.render_magnets = True
 bp.set_roof_object(FlatRoof())
 bp.corner_chamfer = 10
 bp.wall_width = 15
+
+bp.roof_height = 11
 bp.roof_overflow = -3
+bp.roof_chamfer_faces_selector = ""
+bp.roof_chamfer_edges_selector = "(not <Z)"
+
 bp.pip_padding = 8
 bp.render_pips = True
 bp.render_magnets = True
