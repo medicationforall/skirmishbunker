@@ -15,6 +15,9 @@ bp.roof_height = 11
 bp.roof_overflow = -3
 bp.roof_chamfer_faces_selector = ""
 bp.roof_chamfer_edges_selector = "(not <Z)"
+bp.roof_tile_size = 20
+bp.roof_tile_padding = 2
+bp.roof_tile_height = 1
 
 bp.pip_padding = 8
 bp.render_pips = True
