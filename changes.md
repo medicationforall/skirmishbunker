@@ -1,5 +1,9 @@
 ## Main wip
 
+## 2.1.0
+* Upped cqterrain version to 0.3.0
+* Removed local Base class and instead resolve Base from cadqueryhelper
+
 ## 2.0.1
 * breaking stuff in the DetailedRoof
   * re-wrote how wall cuts care calculated

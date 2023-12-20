@@ -13,8 +13,7 @@
 # limitations under the License.
 
 import cadquery as cq
-from skirmishbunker import Base
-from cadqueryhelper import shape, grid, series
+from cadqueryhelper import Base, shape, grid, series
 import math
 
 class Catwalk(Base):

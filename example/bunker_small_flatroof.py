@@ -50,3 +50,6 @@ bp.roof_tile_height = 1
 
 bp.make()
 rec = bp.build_plate()
+
+#show_object(rec)
+cq.exporters.export(rec,'stl/bunker_small_flat_roof.stl')

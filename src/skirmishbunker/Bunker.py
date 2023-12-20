@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import Base
 import cadquery as cq
-from cadqueryhelper import series
+from cadqueryhelper import Base, series
 from cqterrain import roof, tile, Ladder
 from .FlatRoof import FlatRoof
 from .SeriesHelper import SeriesHelper

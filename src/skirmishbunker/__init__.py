@@ -1,4 +1,3 @@
-from .Base import Base
 from .Bunker import Bunker
 from .BlastDoor import BlastDoor
 from .SplitDoor import SplitDoor

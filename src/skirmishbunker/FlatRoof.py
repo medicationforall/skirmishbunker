@@ -13,10 +13,9 @@
 # limitations under the License.
 
 import cadquery as cq
-from . import Base
 from .Hatch import Hatch
 from .SeriesHelper import SeriesHelper
-from cadqueryhelper import series, grid
+from cadqueryhelper import Base, series, grid
 from math import floor as math_floor
 
 class FlatRoof(Base):

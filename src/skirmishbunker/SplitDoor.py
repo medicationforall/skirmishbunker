@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import Base
 import cadquery as cq
-from cadqueryhelper import shape, wave
+from cadqueryhelper import Base, shape, wave
 
 class SplitDoor(Base):
     def __init__(self):
