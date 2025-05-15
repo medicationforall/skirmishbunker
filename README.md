@@ -1,6 +1,13 @@
 # skirmishbunker
 python Library for making a skirmish wargame bunker
 
+---
+
+## ARCHIVE
+This repo is an archive, active development has been moved to [cqgothic](https://github.com/medicationforall/cqgothic)
+
+---
+
 ![](./documentation/image/cover.png)
 
 ## Documentation
